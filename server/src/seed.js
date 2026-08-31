@@ -21,7 +21,7 @@ async function seed() {
   console.log("[seed] Creating users...");
   const admin = await User.create({
     name: "Admin User",
-    email: "admin@aether.news",
+    email: "admin@delta.news",
     password: "Admin123!",
     role: "admin",
     preferredLanguage: "en",
@@ -29,7 +29,7 @@ async function seed() {
 
   const editor = await User.create({
     name: "Sara Al-Hassan",
-    email: "editor@aether.news",
+    email: "editor@delta.news",
     password: "Editor123!",
     role: "editor",
     preferredLanguage: "ar",
@@ -38,7 +38,7 @@ async function seed() {
 
   const writer = await User.create({
     name: "James Carter",
-    email: "james@aether.news",
+    email: "james@delta.news",
     password: "Editor123!",
     role: "editor",
     preferredLanguage: "en",
@@ -102,7 +102,7 @@ async function seed() {
           content:
             "<p>In a match defined by tactical discipline rather than pure spectacle, the Champions League final delivered a masterclass in modern football management.</p><p>From the opening whistle, the eventual winners controlled space with a compact mid-block.</p>",
           slug: "champions-league-final-tactical-masterclass",
-          seoTitle: "Champions League Final Analysis | Aether News",
+          seoTitle: "Champions League Final Analysis | Delta News",
           seoDescription: "Tactical breakdown of the Champions League final.",
         },
         ar: {
@@ -111,7 +111,7 @@ async function seed() {
           content:
             "<p>في مباراة حسمها الانضباط التكتيكي أكثر من الاستعراض، قدم نهائي دوري أبطال أوروبا درساً في الإدارة الحديثة لكرة القدم.</p>",
           slug: "nahaie-dawri-al-abtal",
-          seoTitle: "تحليل نهائي دوري الأبطال | أثير نيوز",
+          seoTitle: "تحليل نهائي دوري الأبطال | دلتا نيوز",
         },
       },
       category: bySlug.football._id,
@@ -234,8 +234,8 @@ async function seed() {
   ]);
 
   console.log("[seed] Done.");
-  console.log("  Admin:  admin@aether.news / Admin123!");
-  console.log("  Editor: editor@aether.news / Editor123!");
+  console.log("  Admin:  admin@delta.news / Admin123!");
+  console.log("  Editor: editor@delta.news / Editor123!");
   await mongoose.disconnect();
 }
 

@@ -59,7 +59,7 @@ app.use("/api/auth/register", authLimiter);
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
-    message: "Aether News API is running",
+    message: "Delta News API is running",
     env: env.nodeEnv,
   });
 });

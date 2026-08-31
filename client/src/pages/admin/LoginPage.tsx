@@ -14,7 +14,7 @@ export function LoginPage() {
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/admin";
 
-  const [email, setEmail] = useState("admin@aether.news");
+  const [email, setEmail] = useState("admin@delta.news");
   const [password, setPassword] = useState("Admin123!");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -85,9 +85,9 @@ export function LoginPage() {
         <p className="mt-6 text-xs text-muted text-center leading-relaxed">
           Seed accounts (after npm run seed):
           <br />
-          admin@aether.news / Admin123!
+          admin@delta.news / Admin123!
           <br />
-          editor@aether.news / Editor123!
+          editor@delta.news / Editor123!
         </p>
       </div>
     </div>
