@@ -1,65 +1,45 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineSearch } from "react-icons/hi";
-import { articles as allArticles } from "@/data/articles";
-import { categories } from "@/data/categories";
+import { useArticles } from "@/hooks/useArticles";
+import { useCategories } from "@/hooks/useCategories";
 import { useLocale } from "@/hooks/useLocale";
-import { getLocalizedArticle } from "@/utils/article";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { Button } from "@/components/ui/Button";
 import { Seo } from "@/components/seo/Seo";
 import { LocaleLink } from "@/components/routing/LocaleLink";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 import { cn } from "@/utils/cn";
 
 type SortKey = "latest" | "popular" | "trending";
-const PAGE_SIZE = 9;
 
 export function NewsListingPage() {
   const locale = useLocale();
   const { t } = useTranslation(["common", "articles", "navigation"]);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { categories } = useCategories();
 
   const q = searchParams.get("q") || "";
-  const categoryFilter = searchParams.get("category") || "all";
+  const categoryFilter = searchParams.get("category") || "";
   const sort = (searchParams.get("sort") as SortKey) || "latest";
   const page = Math.max(1, Number(searchParams.get("page") || 1));
   const [searchInput, setSearchInput] = useState(q);
 
-  const filtered = useMemo(() => {
-    let list = allArticles.filter((a) => a.status === "published");
-    if (categoryFilter !== "all") {
-      list = list.filter((a) => a.category.slug === categoryFilter);
-    }
-    if (q.trim()) {
-      const query = q.toLowerCase();
-      list = list.filter((a) => {
-        const loc = getLocalizedArticle(a, locale);
-        return (
-          loc.title.toLowerCase().includes(query) ||
-          loc.excerpt.toLowerCase().includes(query) ||
-          a.tags.some((tag) => tag.toLowerCase().includes(query))
-        );
-      });
-    }
-    if (sort === "popular") list = [...list].sort((a, b) => b.views - a.views);
-    else if (sort === "trending")
-      list = [...list].filter((a) => a.isTrending).sort((a, b) => b.views - a.views);
-    else
-      list = [...list].sort(
-        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-      );
-    return list;
-  }, [q, categoryFilter, sort, locale]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const { articles, meta, loading, error, reload } = useArticles({
+    language: locale,
+    status: "published",
+    category: categoryFilter || undefined,
+    search: q || undefined,
+    sort,
+    page,
+    limit: 9,
+  });
 
   const updateParams = (updates: Record<string, string>) => {
     const next = new URLSearchParams(searchParams);
     Object.entries(updates).forEach(([k, v]) => {
-      if (!v || v === "all" || (k === "page" && v === "1") || (k === "sort" && v === "latest")) {
+      if (!v || (k === "page" && v === "1") || (k === "sort" && v === "latest")) {
         next.delete(k);
       } else {
         next.set(k, v);
@@ -86,8 +66,8 @@ export function NewsListingPage() {
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-primary">{pageTitle}</h1>
         <p className="mt-1 text-muted text-sm">
-          {filtered.length}{" "}
-          {locale === "ar" ? "نتيجة" : filtered.length === 1 ? "result" : "results"}
+          {meta?.total ?? articles.length}{" "}
+          {locale === "ar" ? "نتيجة" : "results"}
         </p>
       </header>
 
@@ -114,7 +94,7 @@ export function NewsListingPage() {
             onChange={(e) => updateParams({ category: e.target.value, page: "1" })}
             className="h-10 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
           >
-            <option value="all">{t("common:all")}</option>
+            <option value="">{t("common:all")}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.slug}>
                 {c.translations[locale].name}
@@ -142,7 +122,11 @@ export function NewsListingPage() {
         </div>
       </div>
 
-      {pageItems.length === 0 ? (
+      {loading ? (
+        <PageLoader />
+      ) : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : articles.length === 0 ? (
         <div className="py-20 text-center">
           <p className="text-lg text-muted">{t("common:noResults")}</p>
           <LocaleLink to="/news" className="mt-4 inline-block text-accent hover:underline">
@@ -151,30 +135,30 @@ export function NewsListingPage() {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map((article) => (
+          {articles.map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>
       )}
 
-      {totalPages > 1 && (
+      {meta && meta.totalPages > 1 && (
         <nav className="mt-12 flex items-center justify-center gap-2" aria-label="Pagination">
           <Button
             variant="outline"
             size="sm"
-            disabled={currentPage <= 1}
-            onClick={() => updateParams({ page: String(currentPage - 1) })}
+            disabled={page <= 1}
+            onClick={() => updateParams({ page: String(page - 1) })}
           >
             {t("common:previous")}
           </Button>
           <span className="px-3 text-sm text-muted">
-            {currentPage} / {totalPages}
+            {page} / {meta.totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => updateParams({ page: String(currentPage + 1) })}
+            disabled={page >= meta.totalPages}
+            onClick={() => updateParams({ page: String(page + 1) })}
           >
             {t("common:next")}
           </Button>

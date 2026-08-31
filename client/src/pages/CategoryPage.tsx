@@ -1,22 +1,33 @@
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getCategoryBySlug } from "@/data/categories";
-import { getArticlesByCategory } from "@/data/articles";
+import { useArticles } from "@/hooks/useArticles";
+import { useCategories } from "@/hooks/useCategories";
 import { useLocale } from "@/hooks/useLocale";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { SectionTitle } from "@/components/common/SectionTitle";
 import { Seo } from "@/components/seo/Seo";
 import { LocaleLink } from "@/components/routing/LocaleLink";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 
 export function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const locale = useLocale();
   const { t } = useTranslation("common");
+  const { categories, loading: catLoading } = useCategories();
+  const { articles, loading, error, reload } = useArticles({
+    language: locale,
+    category: slug,
+    status: "published",
+    limit: 30,
+    sort: "latest",
+  });
 
-  const category = getCategoryBySlug(slug || "");
-  const articles = getArticlesByCategory(slug || "");
+  const category = categories.find((c) => c.slug === slug);
 
-  if (!category) {
+  if (loading || catLoading) return <PageLoader />;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+
+  if (!category && articles.length === 0) {
     return (
       <div className="container-aether py-20 text-center">
         <Seo title={t("noResults")} path="/" noIndex />
@@ -28,8 +39,8 @@ export function CategoryPage() {
     );
   }
 
-  const name = category.translations[locale].name;
-  const description = category.translations[locale].description;
+  const name = category?.translations[locale].name || slug || "";
+  const description = category?.translations[locale].description;
   const [featured, ...rest] = articles;
 
   return (
@@ -37,7 +48,7 @@ export function CategoryPage() {
       <Seo
         title={name}
         description={description || `${name} — Aether News`}
-        path={`/${category.slug}`}
+        path={`/${slug}`}
       />
 
       <header className="mb-10 border-b border-border pb-6">

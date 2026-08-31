@@ -1,11 +1,7 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getFeaturedArticles,
-  getTrendingArticles,
-  getBreakingArticles,
-  getLatestArticles,
-  getArticlesByCategory,
-} from "@/data/articles";
+import { useArticles } from "@/hooks/useArticles";
+import { useLocale } from "@/hooks/useLocale";
 import { BreakingTicker } from "@/components/article/BreakingTicker";
 import { HeroArticle } from "@/components/article/HeroArticle";
 import { ArticleCard } from "@/components/article/ArticleCard";
@@ -14,26 +10,43 @@ import { TrendingSidebar } from "@/components/home/TrendingSidebar";
 import { NewsletterCTA } from "@/components/home/NewsletterCTA";
 import { SectionTitle } from "@/components/common/SectionTitle";
 import { Seo } from "@/components/seo/Seo";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 
 export function HomePage() {
   const { t } = useTranslation("home");
+  const locale = useLocale();
 
-  const featured = getFeaturedArticles();
-  const trending = getTrendingArticles();
-  const breaking = getBreakingArticles();
-  const latest = getLatestArticles(8);
-  const sports = getArticlesByCategory("sports");
-  const football = getArticlesByCategory("football");
-  const technology = getArticlesByCategory("technology");
-  const business = getArticlesByCategory("business");
+  const { articles, loading, error, reload } = useArticles({
+    language: locale,
+    status: "published",
+    limit: 40,
+    sort: "latest",
+  });
+
+  const { featured, trending, breaking, latest, byCategory } = useMemo(() => {
+    const featured = articles.filter((a) => a.isFeatured);
+    const trending = articles.filter((a) => a.isTrending).sort((a, b) => b.views - a.views);
+    const breaking = articles.filter((a) => a.isBreaking);
+    const latest = [...articles].sort(
+      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+    const byCategory = (slug: string) => articles.filter((a) => a.category.slug === slug);
+    return { featured, trending, breaking, latest, byCategory };
+  }, [articles]);
+
+  if (loading) return <PageLoader />;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
 
   const hero = featured[0] ?? latest[0];
   const sideFeatured = featured.slice(1, 4);
+  const football = byCategory("football");
+  const technology = byCategory("technology");
+  const sports = byCategory("sports");
+  const business = byCategory("business");
 
   return (
     <div className="pb-16">
       <Seo
-        title={undefined}
         description="Independent journalism for a connected world. Sports, technology, business — in Arabic and English."
         path="/"
       />
@@ -46,13 +59,9 @@ export function HomePage() {
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8">{hero && <HeroArticle article={hero} />}</div>
           <div className="lg:col-span-4 flex flex-col gap-4">
-            {sideFeatured.map((article) => (
+            {(sideFeatured.length ? sideFeatured : latest.slice(1, 4)).map((article) => (
               <ArticleCard key={article.id} article={article} variant="horizontal" priority />
             ))}
-            {sideFeatured.length === 0 &&
-              latest.slice(1, 4).map((article) => (
-                <ArticleCard key={article.id} article={article} variant="horizontal" />
-              ))}
           </div>
         </div>
       </div>

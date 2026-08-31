@@ -1,12 +1,9 @@
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineShare, HiOutlineBookmark } from "react-icons/hi2";
-import {
-  getArticleBySlug,
-  getTrendingArticles,
-  getArticlesByCategory,
-  articles as allArticles,
-} from "@/data/articles";
+import { useState } from "react";
+import { useArticle, useArticles } from "@/hooks/useArticles";
+import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/hooks/useLocale";
 import {
   getLocalizedArticle,
@@ -14,27 +11,33 @@ import {
   getCategoryPath,
   formatDate,
 } from "@/utils/article";
+import * as bookmarksApi from "@/services/bookmarks.api";
 import { Badge } from "@/components/ui/Badge";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { SectionTitle } from "@/components/common/SectionTitle";
 import { Button } from "@/components/ui/Button";
 import { Seo } from "@/components/seo/Seo";
 import { LocaleLink } from "@/components/routing/LocaleLink";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 
 export function ArticlePage() {
   const { slug } = useParams<{ slug: string }>();
   const locale = useLocale();
   const { t } = useTranslation(["common", "articles"]);
+  const { isAuthenticated } = useAuth();
+  const { article, loading, error, reload } = useArticle(slug);
+  const { articles: relatedPool } = useArticles(
+    { language: locale, status: "published", limit: 20, sort: "latest" },
+    !!article
+  );
+  const [bookmarkMsg, setBookmarkMsg] = useState("");
 
-  const article =
-    getArticleBySlug(slug || "", locale) ||
-    getArticleBySlug(slug || "", locale === "ar" ? "en" : "ar");
-
-  if (!article) {
+  if (loading) return <PageLoader />;
+  if (error || !article) {
     return (
       <div className="container-aether py-20 text-center">
         <Seo title={t("common:noResults")} path="/" noIndex />
-        <h1 className="text-2xl font-bold text-primary">{t("common:noResults")}</h1>
+        <ErrorState message={error || t("common:noResults")} onRetry={reload} />
         <LocaleLink to="/" className="mt-4 inline-block text-accent hover:underline">
           {t("common:back")}
         </LocaleLink>
@@ -43,26 +46,18 @@ export function ArticlePage() {
   }
 
   const localized = getLocalizedArticle(article, locale);
-  const contentLocale = article.translations[locale].content
-    ? locale
-    : locale === "ar"
-      ? "en"
-      : "ar";
-  const content = article.translations[contentLocale].content;
+  const content =
+    article.translations[locale].content ||
+    article.translations[locale === "ar" ? "en" : "ar"].content;
   const catName = article.category.translations[locale].name;
   const catPath = getCategoryPath(article.category.slug, locale);
 
-  const related = getArticlesByCategory(article.category.slug)
-    .filter((a) => a.id !== article.id)
+  const related = relatedPool
+    .filter((a) => a.category.slug === article.category.slug && a.id !== article.id)
     .slice(0, 3);
-  const trending = getTrendingArticles()
-    .filter((a) => a.id !== article.id)
+  const trending = relatedPool
+    .filter((a) => a.isTrending && a.id !== article.id)
     .slice(0, 5);
-
-  const currentIndex = allArticles.findIndex((a) => a.id === article.id);
-  const prevArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
-  const nextArticle =
-    currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null;
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -74,6 +69,19 @@ export function ArticlePage() {
       }
     } else {
       await navigator.clipboard.writeText(url);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!isAuthenticated) {
+      setBookmarkMsg(locale === "ar" ? "يجب تسجيل الدخول أولاً" : "Please log in first");
+      return;
+    }
+    try {
+      await bookmarksApi.addBookmark(article.id);
+      setBookmarkMsg(t("common:bookmarked"));
+    } catch (err) {
+      setBookmarkMsg(err instanceof Error ? err.message : "Error");
     }
   };
 
@@ -114,7 +122,6 @@ export function ArticlePage() {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary leading-tight">
                 {localized.title}
               </h1>
-
               <p className="mt-4 text-lg text-muted leading-relaxed">{localized.excerpt}</p>
 
               <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-y border-border py-4">
@@ -142,17 +149,17 @@ export function ArticlePage() {
                     <HiOutlineShare className="size-4" />
                     {t("common:share")}
                   </Button>
-                  <Button variant="ghost" size="sm" type="button">
+                  <Button variant="ghost" size="sm" type="button" onClick={handleBookmark}>
                     <HiOutlineBookmark className="size-4" />
                     {t("common:bookmark")}
                   </Button>
                 </div>
               </div>
+              {bookmarkMsg && <p className="mt-2 text-sm text-accent">{bookmarkMsg}</p>}
 
               <div
                 className="article-body mt-8 prose prose-slate max-w-none
-                  prose-headings:text-primary prose-p:text-primary/90 prose-p:leading-relaxed
-                  prose-a:text-accent prose-strong:text-primary
+                  prose-headings:text-primary prose-p:text-primary/90
                   [&>p]:mb-5 [&>p]:text-[1.05rem] md:[&>p]:text-[1.1rem]"
                 dangerouslySetInnerHTML={{ __html: content }}
               />
@@ -169,33 +176,6 @@ export function ArticlePage() {
                   ))}
                 </div>
               )}
-
-              <div className="mt-10 grid gap-4 sm:grid-cols-2 border-t border-border pt-8">
-                {prevArticle ? (
-                  <Link
-                    to={getArticlePath(prevArticle, locale)}
-                    className="group rounded-lg border border-border p-4 hover:border-accent/40 transition-colors"
-                  >
-                    <p className="text-xs text-muted mb-1">{t("articles:prevArticle")}</p>
-                    <p className="text-sm font-semibold text-primary group-hover:text-accent line-clamp-2">
-                      {getLocalizedArticle(prevArticle, locale).title}
-                    </p>
-                  </Link>
-                ) : (
-                  <div />
-                )}
-                {nextArticle && (
-                  <Link
-                    to={getArticlePath(nextArticle, locale)}
-                    className="group rounded-lg border border-border p-4 hover:border-accent/40 transition-colors text-end"
-                  >
-                    <p className="text-xs text-muted mb-1">{t("articles:nextArticle")}</p>
-                    <p className="text-sm font-semibold text-primary group-hover:text-accent line-clamp-2">
-                      {getLocalizedArticle(nextArticle, locale).title}
-                    </p>
-                  </Link>
-                )}
-              </div>
             </div>
 
             {related.length > 0 && (
