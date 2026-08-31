@@ -9,6 +9,7 @@ import { cn } from "@/utils/cn";
 
 const navItems = [
   { key: "home", path: "/" },
+  { key: "news", path: "/news" },
   { key: "sports", path: "/sports" },
   { key: "football", path: "/football" },
   { key: "technology", path: "/technology" },
@@ -28,7 +29,10 @@ export function Navbar() {
             Aether News · Independent Journalism
           </span>
           <div className="hidden sm:block">
-            <LanguageSwitcher compact className="border-white/20 bg-transparent [&>button]:text-white/80 [&>button[aria-pressed=true]]:bg-white/15 [&>button[aria-pressed=true]]:text-white" />
+            <LanguageSwitcher
+              compact
+              className="border-white/20 bg-transparent [&>button]:text-white/80 [&>button[aria-pressed=true]]:bg-white/15 [&>button[aria-pressed=true]]:text-white"
+            />
           </div>
         </div>
       </div>
@@ -61,13 +65,13 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Link
+              to="/search"
               className="p-2 rounded-md text-muted hover:text-primary hover:bg-surface transition-colors"
               aria-label={t("search")}
             >
               <HiOutlineSearch className="size-5" />
-            </button>
+            </Link>
 
             <div className="hidden sm:block lg:hidden">
               <LanguageSwitcher compact />
@@ -104,7 +108,7 @@ export function Navbar() {
       <div
         className={cn(
           "lg:hidden border-t border-border bg-card overflow-hidden transition-all duration-300",
-          mobileOpen ? "max-h-[420px] opacity-100" : "max-h-0 opacity-0"
+          mobileOpen ? "max-h-[480px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <nav className="container-aether py-4 flex flex-col gap-1" aria-label="Mobile">
@@ -124,6 +128,15 @@ export function Navbar() {
               {t(item.key)}
             </NavLink>
           ))}
+
+          <Link
+            to="/search"
+            onClick={() => setMobileOpen(false)}
+            className="px-3 py-2.5 text-base font-medium rounded-md text-primary hover:bg-surface flex items-center gap-2"
+          >
+            <HiOutlineSearch className="size-5" />
+            {t("search")}
+          </Link>
 
           <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2">
             <LanguageSwitcher />
