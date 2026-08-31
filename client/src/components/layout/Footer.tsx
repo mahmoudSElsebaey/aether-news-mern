@@ -71,7 +71,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
-          <p>© {year} Aether News. All rights reserved.</p>
+          <p>© {year} Delta News. All rights reserved.</p>
           <p>Built for independent media · MERN</p>
         </div>
       </div>

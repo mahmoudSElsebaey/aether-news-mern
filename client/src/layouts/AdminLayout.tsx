@@ -28,7 +28,7 @@ export function AdminLayout() {
         <div
           className={cn(
             "absolute inset-y-0 start-0 w-64 transition-transform duration-300",
-            open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full rtl:translate-x-full"
+            open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"
           )}
           role="dialog"
           aria-modal="true"
@@ -49,7 +49,7 @@ export function AdminLayout() {
           >
             {open ? <HiOutlineX className="size-5" /> : <HiOutlineMenuAlt3 className="size-5" />}
           </button>
-          <span className="text-sm font-medium text-muted lg:hidden">Aether Admin</span>
+          <span className="text-sm font-medium text-muted lg:hidden">Delta Admin</span>
         </header>
 
         <main id="main-content" className="p-4 md:p-6 lg:p-8" tabIndex={-1}>
