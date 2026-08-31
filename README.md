@@ -17,42 +17,39 @@ Modern production-ready News & Media platform built with the **MERN stack**.
 
 ---
 
-## Project Structure
+## URL strategy (multilingual SEO)
 
 ```
-aether-news-mern/
-├── client/          # React + TypeScript + Vite + Tailwind
-└── server/          # Express + MongoDB + Mongoose
+/en                  Home (English, LTR)
+/ar                  Home (Arabic, RTL)
+/en/sports           Category
+/ar/sports
+/en/article/slug     Article (language-specific slug)
+/ar/article/slug-ar
+/en/news?q=...       Listing + search
 ```
+
+- `hreflang` alternates for `en`, `ar`, and `x-default`
+- Canonical per language
+- Open Graph + Twitter cards
+- JSON-LD `NewsArticle` on article pages
+- `robots.txt` allows `/en/` and `/ar/`
 
 ---
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+
-- MongoDB (local or Atlas)
-
-### 1. Backend
+### Backend
 
 ```bash
 cd server
 cp .env.example .env
-# Edit MONGODB_URI and JWT_SECRET
 npm install
 npm run seed
 npm run dev
 ```
 
-API: http://localhost:5000/api/health
-
-**Seed accounts**
-| Role   | Email               | Password   |
-|--------|---------------------|------------|
-| Admin  | admin@aether.news   | Admin123!  |
-| Editor | editor@aether.news  | Editor123! |
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd client
@@ -61,33 +58,23 @@ npm install
 npm run dev
 ```
 
-App: http://localhost:5173
+Open http://localhost:5173 → redirects to `/en` or `/ar`.
+
+**Seed accounts**
+| Role   | Email               | Password   |
+|--------|---------------------|------------|
+| Admin  | admin@aether.news   | Admin123!  |
+| Editor | editor@aether.news  | Editor123! |
 
 ---
 
 ## API Overview
 
 ```
-POST   /api/auth/register
-POST   /api/auth/login
-POST   /api/auth/logout
-GET    /api/auth/me
-
-GET    /api/articles?language=ar&category=sports&page=1&sort=latest
-GET    /api/articles/:slug
-POST   /api/articles          (editor|admin)
-PATCH  /api/articles/:id      (editor|admin)
-DELETE /api/articles/:id      (editor|admin)
-
-GET    /api/categories
-GET    /api/categories/:slug
-POST   /api/categories        (admin)
-
-GET    /api/bookmarks         (auth)
-POST   /api/bookmarks         (auth)
-DELETE /api/bookmarks/:articleId
-
-GET    /api/users             (admin)
+GET /api/articles?language=ar&category=sports&page=1
+GET /api/articles/:slug
+POST /api/auth/login
+...
 ```
 
 ---
@@ -100,7 +87,7 @@ GET    /api/users             (admin)
 | 1 — Brand & Design System | ✅ |
 | 2 — Public Website | ✅ |
 | 3 — Backend | ✅ |
-| 4 — Multilingual Content System | Pending |
+| 4 — Multilingual Content System | ✅ |
 | 5 — Admin Dashboard | Pending |
 | 6 — Integration | Pending |
 | 7 — Polish & Quality | Pending |

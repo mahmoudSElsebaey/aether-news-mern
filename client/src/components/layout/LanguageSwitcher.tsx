@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
-import { switchLocalePath, isLocale } from "@/utils/locale";
+import { switchLocalePath, isLocale, localizedPath } from "@/utils/locale";
+import { getArticleBySlug } from "@/data/articles";
 import type { Locale } from "@/types/article";
 
 const languages: { code: Locale; label: string; short: string }[] = [
@@ -12,6 +13,22 @@ const languages: { code: Locale; label: string; short: string }[] = [
 interface LanguageSwitcherProps {
   className?: string;
   compact?: boolean;
+}
+
+function resolveNextPath(pathname: string, from: Locale, to: Locale): string {
+  // If on an article page, map to the other language slug
+  const parts = pathname.split("/").filter(Boolean);
+  // expected: [lang, "article", slug]
+  if (parts.length >= 3 && parts[1] === "article") {
+    const currentSlug = parts.slice(2).join("/");
+    const article =
+      getArticleBySlug(currentSlug, from) || getArticleBySlug(currentSlug, to);
+    if (article) {
+      const nextSlug = article.translations[to].slug;
+      return localizedPath(`/article/${nextSlug}`, to);
+    }
+  }
+  return switchLocalePath(pathname, to);
 }
 
 export function LanguageSwitcher({ className, compact = false }: LanguageSwitcherProps) {
@@ -28,7 +45,7 @@ export function LanguageSwitcher({ className, compact = false }: LanguageSwitche
   const switchTo = (code: Locale) => {
     if (code === current) return;
     i18n.changeLanguage(code);
-    const nextPath = switchLocalePath(location.pathname, code);
+    const nextPath = resolveNextPath(location.pathname, current, code);
     navigate(`${nextPath}${location.search}`, { replace: true });
   };
 
