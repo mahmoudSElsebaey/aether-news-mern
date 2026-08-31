@@ -19,26 +19,17 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   if (authLoading) return <PageLoader />;
-
-  if (isAuthenticated && isStaff) {
-    return <Navigate to="/admin" replace />;
-  }
+  if (isAuthenticated && isStaff) return <Navigate to="/admin" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const user = await register({
-        name: name.trim(),
-        email: email.trim(),
-        password,
+      const user = await register({ name: name.trim(), email: email.trim(), password });
+      navigate(user.role === "admin" || user.role === "editor" ? "/admin" : "/en", {
+        replace: true,
       });
-      if (user.role === "admin" || user.role === "editor") {
-        navigate("/admin", { replace: true });
-      } else {
-        navigate("/en", { replace: true });
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -47,74 +38,81 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
-      <div className="absolute top-4 end-4">
-        <LanguageSwitcher />
+    <div className="min-h-screen grid lg:grid-cols-2 bg-surface">
+      <div className="relative hidden lg:flex flex-col justify-end overflow-hidden bg-primary p-10 text-white">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 end-0 size-72 rounded-full bg-accent/40 blur-3xl" />
+          <div className="absolute bottom-0 start-1/4 size-64 rounded-full bg-secondary blur-3xl" />
+        </div>
+        <div className="relative z-10 max-w-md">
+          <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold">Delta News</p>
+          <h1 className="mt-3 text-3xl font-bold leading-snug">
+            Create your editorial identity in two languages.
+          </h1>
+          <p className="mt-3 text-sm text-white/65 leading-relaxed">
+            First account on an empty database becomes admin automatically.
+          </p>
+        </div>
       </div>
 
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-soft">
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <Logo />
-          <p className="text-sm text-muted">{t("navigation:register")}</p>
+      <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12">
+        <div className="absolute top-4 end-4">
+          <LanguageSwitcher />
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-primary">Name</label>
-            <input
-              type="text"
-              required
-              minLength={2}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full h-11 rounded-md border border-border bg-surface px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+        <div className="mx-auto w-full max-w-md">
+          <div className="mb-8">
+            <Logo />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-primary">Email</label>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-11 rounded-md border border-border bg-surface px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-primary">Password</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-11 rounded-md border border-border bg-surface px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-            <p className="mt-1 text-xs text-muted">Min 6 characters</p>
-          </div>
+          <h2 className="text-2xl font-bold text-primary">{t("navigation:register")}</h2>
+          <p className="mt-1 text-sm text-muted">Join the newsroom</p>
 
-          {error && (
-            <p className="text-sm text-error bg-error/10 rounded-md px-3 py-2">{error}</p>
-          )}
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">Name</label>
+              <input
+                required
+                minLength={2}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-12 rounded-xl border border-border bg-card px-4 text-sm shadow-soft focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-12 rounded-xl border border-border bg-card px-4 text-sm shadow-soft focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">Password</label>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full h-12 rounded-xl border border-border bg-card px-4 text-sm shadow-soft focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-error bg-error/10 rounded-xl px-3 py-2">{error}</p>
+            )}
+            <Button type="submit" variant="accent" size="lg" fullWidth isLoading={loading}>
+              {t("navigation:register")}
+            </Button>
+          </form>
 
-          <Button type="submit" variant="accent" size="lg" fullWidth isLoading={loading}>
-            {t("navigation:register")}
-          </Button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-muted">
-          Already have an account?{" "}
-          <Link to="/admin/login" className="text-accent font-medium hover:underline">
-            {t("navigation:login")}
-          </Link>
-        </p>
-
-        <p className="mt-4 text-xs text-muted text-center leading-relaxed">
-          If the database has <strong>no users</strong>, your account becomes{" "}
-          <strong>admin</strong> and you can open the dashboard.
-        </p>
+          <p className="mt-8 text-center text-sm text-muted">
+            Already have an account?{" "}
+            <Link to="/admin/login" className="text-accent font-medium hover:underline">
+              {t("navigation:login")}
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
