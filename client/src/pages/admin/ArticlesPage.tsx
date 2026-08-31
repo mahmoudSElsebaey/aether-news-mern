@@ -2,49 +2,38 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
-import { articles as seedArticles } from "@/data/articles";
-import type { Article } from "@/types/article";
+import { useArticles } from "@/hooks/useArticles";
+import * as articlesApi from "@/services/articles.api";
 import { useLocale } from "@/hooks/useLocale";
 import { getLocalizedArticle, formatDate } from "@/utils/article";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 import { cn } from "@/utils/cn";
-
-/** Local editable store for admin demo (resets on refresh) */
-let adminArticles: Article[] = [...seedArticles];
-
-export function getAdminArticles() {
-  return adminArticles;
-}
-
-export function setAdminArticles(next: Article[]) {
-  adminArticles = next;
-}
 
 export function ArticlesPage() {
   const { t } = useTranslation("dashboard");
   const locale = useLocale();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [list, setList] = useState<Article[]>(() => [...adminArticles]);
 
-  const filtered = useMemo(() => {
-    return list.filter((a) => {
-      const loc = getLocalizedArticle(a, locale);
-      const matchesQuery =
-        !query ||
-        loc.title.toLowerCase().includes(query.toLowerCase()) ||
-        a.tags.some((tag) => tag.includes(query.toLowerCase()));
-      const matchesStatus = statusFilter === "all" || a.status === statusFilter;
-      return matchesQuery && matchesStatus;
-    });
-  }, [list, query, statusFilter, locale]);
+  const { articles, loading, error, reload } = useArticles({
+    status: statusFilter === "all" ? "all" : statusFilter,
+    search: query || undefined,
+    limit: 50,
+    sort: "latest",
+  });
 
-  const handleDelete = (id: string) => {
+  const filtered = useMemo(() => articles, [articles]);
+
+  const handleDelete = async (id: string) => {
     if (!window.confirm(t("confirmDelete"))) return;
-    const next = list.filter((a) => a.id !== id);
-    setList(next);
-    setAdminArticles(next);
+    try {
+      await articlesApi.deleteArticle(id);
+      reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    }
   };
 
   return (
@@ -82,96 +71,100 @@ export function ArticlesPage() {
         </select>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-start">
-            <thead className="bg-surface border-b border-border">
-              <tr>
-                <th className="px-4 py-3 font-semibold text-muted text-start">{t("titleField")}</th>
-                <th className="px-4 py-3 font-semibold text-muted text-start hidden md:table-cell">
-                  {t("category")}
-                </th>
-                <th className="px-4 py-3 font-semibold text-muted text-start">{t("status")}</th>
-                <th className="px-4 py-3 font-semibold text-muted text-start hidden lg:table-cell">
-                  Flags
-                </th>
-                <th className="px-4 py-3 font-semibold text-muted text-end">{t("actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filtered.length === 0 ? (
+      {loading ? (
+        <PageLoader />
+      ) : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-start">
+              <thead className="bg-surface border-b border-border">
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-muted">
-                    {t("noArticles")}
-                  </td>
+                  <th className="px-4 py-3 font-semibold text-muted text-start">{t("titleField")}</th>
+                  <th className="px-4 py-3 font-semibold text-muted text-start hidden md:table-cell">
+                    {t("category")}
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-muted text-start">{t("status")}</th>
+                  <th className="px-4 py-3 font-semibold text-muted text-start hidden lg:table-cell">
+                    Flags
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-muted text-end">{t("actions")}</th>
                 </tr>
-              ) : (
-                filtered.map((article) => {
-                  const loc = getLocalizedArticle(article, locale);
-                  return (
-                    <tr key={article.id} className="hover:bg-surface/50">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={article.coverImage}
-                            alt=""
-                            className="size-10 rounded object-cover shrink-0 hidden sm:block"
-                          />
-                          <div className="min-w-0">
-                            <p className="font-medium text-primary truncate max-w-xs">{loc.title}</p>
-                            <p className="text-xs text-muted">
-                              {formatDate(article.publishedAt, locale)} · {article.views} views
-                            </p>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-muted">
+                      {t("noArticles")}
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((article) => {
+                    const loc = getLocalizedArticle(article, locale);
+                    return (
+                      <tr key={article.id} className="hover:bg-surface/50">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {article.coverImage && (
+                              <img
+                                src={article.coverImage}
+                                alt=""
+                                className="size-10 rounded object-cover shrink-0 hidden sm:block"
+                              />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-primary truncate max-w-xs">{loc.title}</p>
+                              <p className="text-xs text-muted">
+                                {formatDate(article.publishedAt, locale)} · {article.views} views
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell text-muted">
-                        {article.category.translations[locale].name}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant={article.status === "published" ? "default" : "muted"}
-                          className={cn(
-                            article.status === "draft" && "bg-warning/15 text-warning"
-                          )}
-                        >
-                          {article.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 hidden lg:table-cell">
-                        <div className="flex gap-1 flex-wrap">
-                          {article.isFeatured && <Badge variant="featured">{t("featured")}</Badge>}
-                          {article.isTrending && <Badge variant="trending">{t("trending")}</Badge>}
-                          {article.isBreaking && <Badge variant="breaking">{t("breaking")}</Badge>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link
-                            to={`/admin/articles/${article.id}/edit`}
-                            className="p-2 rounded-md text-muted hover:text-primary hover:bg-surface"
-                            aria-label={t("editArticle")}
+                        </td>
+                        <td className="px-4 py-3 hidden md:table-cell text-muted">
+                          {article.category.translations[locale].name}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={article.status === "published" ? "default" : "muted"}
+                            className={cn(article.status === "draft" && "bg-warning/15 text-warning")}
                           >
-                            <HiOutlinePencil className="size-4" />
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(article.id)}
-                            className="p-2 rounded-md text-muted hover:text-error hover:bg-error/10"
-                            aria-label={t("deleteArticle")}
-                          >
-                            <HiOutlineTrash className="size-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                            {article.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 hidden lg:table-cell">
+                          <div className="flex gap-1 flex-wrap">
+                            {article.isFeatured && <Badge variant="featured">{t("featured")}</Badge>}
+                            {article.isTrending && <Badge variant="trending">{t("trending")}</Badge>}
+                            {article.isBreaking && <Badge variant="breaking">{t("breaking")}</Badge>}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <Link
+                              to={`/admin/articles/${article.id}/edit`}
+                              className="p-2 rounded-md text-muted hover:text-primary hover:bg-surface"
+                            >
+                              <HiOutlinePencil className="size-4" />
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(article.id)}
+                              className="p-2 rounded-md text-muted hover:text-error hover:bg-error/10"
+                            >
+                              <HiOutlineTrash className="size-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

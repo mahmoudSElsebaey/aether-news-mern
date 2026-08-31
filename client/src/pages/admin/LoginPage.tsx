@@ -5,10 +5,11 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useAuth } from "@/context/AuthContext";
+import { PageLoader } from "@/components/ui/Spinner";
 
 export function LoginPage() {
   const { t } = useTranslation(["navigation", "common"]);
-  const { login, isAuthenticated, isStaff } = useAuth();
+  const { login, isAuthenticated, isStaff, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/admin";
@@ -17,6 +18,8 @@ export function LoginPage() {
   const [password, setPassword] = useState("Admin123!");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (authLoading) return <PageLoader />;
 
   if (isAuthenticated && isStaff) {
     return <Navigate to="/admin" replace />;
@@ -80,7 +83,9 @@ export function LoginPage() {
         </form>
 
         <p className="mt-6 text-xs text-muted text-center leading-relaxed">
-          Demo: admin@aether.news / Admin123!
+          Seed accounts (after npm run seed):
+          <br />
+          admin@aether.news / Admin123!
           <br />
           editor@aether.news / Editor123!
         </p>
