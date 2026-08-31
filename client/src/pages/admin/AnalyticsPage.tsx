@@ -1,11 +1,21 @@
 import { useTranslation } from "react-i18next";
-import { articles } from "@/data/articles";
+import { useArticles } from "@/hooks/useArticles";
 import { useLocale } from "@/hooks/useLocale";
 import { getLocalizedArticle } from "@/utils/article";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 
 export function AnalyticsPage() {
   const { t } = useTranslation("dashboard");
   const locale = useLocale();
+  const { articles, loading, error, reload } = useArticles({
+    status: "all",
+    limit: 50,
+    sort: "popular",
+  });
+
+  if (loading) return <PageLoader />;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+
   const top = [...articles].sort((a, b) => b.views - a.views).slice(0, 5);
   const totalViews = articles.reduce((s, a) => s + a.views, 0);
 
@@ -49,6 +59,7 @@ export function AnalyticsPage() {
               </span>
             </li>
           ))}
+          {top.length === 0 && <li className="text-sm text-muted">{t("noArticles")}</li>}
         </ol>
       </div>
     </div>
