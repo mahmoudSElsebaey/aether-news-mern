@@ -1,21 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { categories as seedCategories } from "@/data/categories";
-import type { Category } from "@/types/article";
+import * as categoriesApi from "@/services/categories.api";
+import type { ApiCategory } from "@/types/api";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 
 export function CategoriesPage() {
   const { t } = useTranslation("dashboard");
-  const [list, setList] = useState<Category[]>(() => [...seedCategories]);
-  const [editing, setEditing] = useState<Category | null>(null);
+  const [list, setList] = useState<ApiCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<ApiCategory | null>(null);
   const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [nameEn, setNameEn] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [descEn, setDescEn] = useState("");
   const [descAr, setDescAr] = useState("");
   const [slug, setSlug] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await categoriesApi.fetchCategories(true);
+      setList(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const openCreate = () => {
     setCreating(true);
@@ -27,7 +48,7 @@ export function CategoriesPage() {
     setSlug("");
   };
 
-  const openEdit = (cat: Category) => {
+  const openEdit = (cat: ApiCategory) => {
     setEditing(cat);
     setCreating(false);
     setNameEn(cat.translations.en.name);
@@ -37,29 +58,44 @@ export function CategoriesPage() {
     setSlug(cat.slug);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!nameEn.trim() || !nameAr.trim()) return;
-    const payload: Category = {
-      id: editing?.id || `cat-${Date.now()}`,
-      slug: slug || nameEn.toLowerCase().replace(/\s+/g, "-"),
-      translations: {
-        en: { name: nameEn, description: descEn },
-        ar: { name: nameAr, description: descAr },
-      },
-    };
-    if (editing) {
-      setList((prev) => prev.map((c) => (c.id === editing.id ? payload : c)));
-    } else {
-      setList((prev) => [...prev, payload]);
+    setSaving(true);
+    try {
+      const payload = {
+        translations: {
+          en: { name: nameEn, description: descEn },
+          ar: { name: nameAr, description: descAr },
+        },
+        slug: slug || undefined,
+      };
+      if (editing) {
+        await categoriesApi.updateCategory(editing._id, payload);
+      } else {
+        await categoriesApi.createCategory(payload);
+      }
+      setEditing(null);
+      setCreating(false);
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
-    setEditing(null);
-    setCreating(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm(t("confirmDelete"))) return;
-    setList((prev) => prev.filter((c) => c.id !== id));
+    try {
+      await categoriesApi.deleteCategory(id);
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    }
   };
+
+  if (loading) return <PageLoader />;
+  if (error) return <ErrorState message={error} onRetry={load} />;
 
   return (
     <div className="space-y-6">
@@ -124,7 +160,7 @@ export function CategoriesPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="accent" onClick={handleSave}>
+            <Button variant="accent" onClick={handleSave} isLoading={saving}>
               {t("save")}
             </Button>
             <Button
@@ -152,7 +188,7 @@ export function CategoriesPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {list.map((cat) => (
-              <tr key={cat.id} className="hover:bg-surface/50">
+              <tr key={cat._id} className="hover:bg-surface/50">
                 <td className="px-4 py-3 font-medium text-primary">{cat.translations.en.name}</td>
                 <td className="px-4 py-3" dir="rtl">
                   {cat.translations.ar.name}
@@ -161,16 +197,12 @@ export function CategoriesPage() {
                   <Badge variant="muted">{cat.slug}</Badge>
                 </td>
                 <td className="px-4 py-3 text-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(cat)}
-                    className="text-sm text-accent hover:underline"
-                  >
+                  <button type="button" onClick={() => openEdit(cat)} className="text-sm text-accent hover:underline">
                     Edit
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(cat.id)}
+                    onClick={() => handleDelete(cat._id)}
                     className="text-sm text-error hover:underline"
                   >
                     Delete

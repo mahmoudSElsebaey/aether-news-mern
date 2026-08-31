@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { categories } from "@/data/categories";
-import { authors } from "@/data/authors";
-import type { Article, ArticleStatus } from "@/types/article";
+import * as articlesApi from "@/services/articles.api";
+import * as categoriesApi from "@/services/categories.api";
+import type { ArticleStatus } from "@/types/article";
+import type { ApiCategory } from "@/types/api";
 import { Button } from "@/components/ui/Button";
+import { PageLoader } from "@/components/ui/Spinner";
 import { cn } from "@/utils/cn";
-import { getAdminArticles, setAdminArticles } from "./ArticlesPage";
 
 type LangTab = "en" | "ar";
 
@@ -47,7 +48,8 @@ export function ArticleEditorPage() {
   const [tab, setTab] = useState<LangTab>("en");
   const [en, setEn] = useState<TranslationForm>(emptyTranslation);
   const [ar, setAr] = useState<TranslationForm>(emptyTranslation);
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [categoryId, setCategoryId] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [status, setStatus] = useState<ArticleStatus>("draft");
   const [isFeatured, setIsFeatured] = useState(false);
@@ -55,21 +57,58 @@ export function ArticleEditorPage() {
   const [isBreaking, setIsBreaking] = useState(false);
   const [tags, setTags] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(!isNew);
+
+  useEffect(() => {
+    categoriesApi.fetchCategories(true).then((cats) => {
+      setCategories(cats);
+      if (!categoryId && cats[0]) setCategoryId(cats[0]._id);
+    });
+  }, [categoryId]);
 
   useEffect(() => {
     if (isNew) return;
-    const article = getAdminArticles().find((a) => a.id === id);
-    if (!article) return;
-    setEn({ ...article.translations.en, seoTitle: article.translations.en.seoTitle || "", seoDescription: article.translations.en.seoDescription || "" });
-    setAr({ ...article.translations.ar, seoTitle: article.translations.ar.seoTitle || "", seoDescription: article.translations.ar.seoDescription || "" });
-    setCategoryId(article.category.id);
-    setCoverImage(article.coverImage);
-    setStatus(article.status);
-    setIsFeatured(article.isFeatured);
-    setIsTrending(article.isTrending);
-    setIsBreaking(article.isBreaking);
-    setTags(article.tags.join(", "));
+    let cancelled = false;
+    (async () => {
+      try {
+        const article = await articlesApi.fetchArticleById(id!);
+        if (cancelled) return;
+        setEn({
+          title: article.translations.en.title,
+          excerpt: article.translations.en.excerpt || "",
+          content: article.translations.en.content || "",
+          slug: article.translations.en.slug,
+          seoTitle: article.translations.en.seoTitle || "",
+          seoDescription: article.translations.en.seoDescription || "",
+        });
+        setAr({
+          title: article.translations.ar.title,
+          excerpt: article.translations.ar.excerpt || "",
+          content: article.translations.ar.content || "",
+          slug: article.translations.ar.slug,
+          seoTitle: article.translations.ar.seoTitle || "",
+          seoDescription: article.translations.ar.seoDescription || "",
+        });
+        const catId =
+          typeof article.category === "string" ? article.category : article.category._id;
+        setCategoryId(catId);
+        setCoverImage(article.coverImage || "");
+        setStatus(article.status);
+        setIsFeatured(article.isFeatured);
+        setIsTrending(article.isTrending);
+        setIsBreaking(article.isBreaking);
+        setTags((article.tags || []).join(", "));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load article");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [id, isNew]);
 
   const current = tab === "en" ? en : ar;
@@ -78,81 +117,58 @@ export function ArticleEditorPage() {
   const updateField = (field: keyof TranslationForm, value: string) => {
     setCurrent((prev) => {
       const next = { ...prev, [field]: value };
-      if (field === "title" && !prev.slug) {
-        next.slug = slugify(value);
-      }
+      if (field === "title" && !prev.slug) next.slug = slugify(value);
       return next;
     });
   };
 
+  const buildPayload = (finalStatus: ArticleStatus) => ({
+    translations: {
+      en: {
+        ...en,
+        slug: en.slug || slugify(en.title) || undefined,
+      },
+      ar: {
+        ...ar,
+        slug: ar.slug || slugify(ar.title) || undefined,
+      },
+    },
+    category: categoryId,
+    coverImage: coverImage || "",
+    status: finalStatus,
+    isFeatured,
+    isTrending,
+    isBreaking,
+    tags: tags
+      .split(",")
+      .map((x) => x.trim().toLowerCase())
+      .filter(Boolean),
+  });
+
   const handleSave = async (nextStatus?: ArticleStatus) => {
     setSaving(true);
     setMessage("");
-    await new Promise((r) => setTimeout(r, 300));
-
-    const cat = categories.find((c) => c.id === categoryId) || categories[0];
+    setError("");
     const finalStatus = nextStatus || status;
-    const list = getAdminArticles();
-
-    if (isNew) {
-      const article: Article = {
-        id: `art-${Date.now()}`,
-        translations: {
-          en: { ...en, slug: en.slug || slugify(en.title) || `article-${Date.now()}` },
-          ar: { ...ar, slug: ar.slug || slugify(ar.title) || `maqal-${Date.now()}` },
-        },
-        category: cat,
-        author: authors[0],
-        coverImage:
-          coverImage ||
-          "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=675&fit=crop",
-        status: finalStatus,
-        isFeatured,
-        isTrending,
-        isBreaking,
-        views: 0,
-        publishedAt: finalStatus === "published" ? new Date().toISOString() : new Date().toISOString(),
-        readingTime: 3,
-        tags: tags
-          .split(",")
-          .map((x) => x.trim().toLowerCase())
-          .filter(Boolean),
-      };
-      setAdminArticles([article, ...list]);
-      setMessage(t("saved"));
-      navigate(`/admin/articles/${article.id}/edit`, { replace: true });
-    } else {
-      const next = list.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              translations: {
-                en: { ...en },
-                ar: { ...ar },
-              },
-              category: cat,
-              coverImage,
-              status: finalStatus,
-              isFeatured,
-              isTrending,
-              isBreaking,
-              tags: tags
-                .split(",")
-                .map((x) => x.trim().toLowerCase())
-                .filter(Boolean),
-              publishedAt:
-                finalStatus === "published" && a.status !== "published"
-                  ? new Date().toISOString()
-                  : a.publishedAt,
-            }
-          : a
-      );
-      setAdminArticles(next);
-      setStatus(finalStatus);
-      setMessage(t("saved"));
+    try {
+      const payload = buildPayload(finalStatus);
+      if (isNew) {
+        const created = await articlesApi.createArticle(payload);
+        setMessage(t("saved"));
+        navigate(`/admin/articles/${created._id}/edit`, { replace: true });
+      } else {
+        await articlesApi.updateArticle(id!, payload);
+        setStatus(finalStatus);
+        setMessage(t("saved"));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
+
+  if (loading) return <PageLoader />;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -175,11 +191,9 @@ export function ArticleEditorPage() {
         </div>
       </div>
 
-      {message && (
-        <p className="text-sm text-success bg-success/10 rounded-md px-3 py-2">{message}</p>
-      )}
+      {message && <p className="text-sm text-success bg-success/10 rounded-md px-3 py-2">{message}</p>}
+      {error && <p className="text-sm text-error bg-error/10 rounded-md px-3 py-2">{error}</p>}
 
-      {/* Language tabs */}
       <div className="flex rounded-md border border-border overflow-hidden w-fit">
         {(["en", "ar"] as LangTab[]).map((lng) => (
           <button
@@ -273,7 +287,7 @@ export function ArticleEditorPage() {
                 className="field-input"
               >
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
+                  <option key={c._id} value={c._id}>
                     {c.translations.en.name} / {c.translations.ar.name}
                   </option>
                 ))}
@@ -292,12 +306,7 @@ export function ArticleEditorPage() {
               <img src={coverImage} alt="" className="rounded-md aspect-video object-cover w-full" />
             )}
             <Field label={t("tags")}>
-              <input
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                className="field-input"
-                dir="ltr"
-              />
+              <input value={tags} onChange={(e) => setTags(e.target.value)} className="field-input" dir="ltr" />
             </Field>
             <div className="space-y-2 pt-2">
               <Toggle label={t("featured")} checked={isFeatured} onChange={setIsFeatured} />
@@ -318,15 +327,8 @@ export function ArticleEditorPage() {
           padding: 0 0.75rem;
           font-size: 0.875rem;
         }
-        .field-input:focus {
-          outline: none;
-          box-shadow: 0 0 0 2px var(--color-accent);
-        }
-        textarea.field-input {
-          height: auto;
-          padding-top: 0.5rem;
-          padding-bottom: 0.5rem;
-        }
+        .field-input:focus { outline: none; box-shadow: 0 0 0 2px var(--color-accent); }
+        textarea.field-input { height: auto; padding-top: 0.5rem; padding-bottom: 0.5rem; }
       `}</style>
     </div>
   );

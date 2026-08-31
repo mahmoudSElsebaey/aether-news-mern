@@ -9,52 +9,51 @@ Modern production-ready News & Media platform built with the **MERN stack**.
 
 ---
 
-## Quick start
+## Quick start (full stack)
 
-### Frontend
+### 1. Backend
 
 ```bash
-cd client && npm install && npm run dev
+cd server
+cp .env.example .env
+# Set MONGODB_URI and JWT_SECRET
+npm install
+npm run seed
+npm run dev
 ```
 
-- Public site: http://localhost:5173 → `/en` or `/ar`
+API: http://localhost:5000/api/health
+
+### 2. Frontend
+
+```bash
+cd client
+cp .env.example .env
+# VITE_API_URL=http://localhost:5000/api
+npm install
+npm run dev
+```
+
+- Public: http://localhost:5173 → `/en` or `/ar`
 - Admin: http://localhost:5173/admin/login
 
-**Admin demo accounts**
+**Accounts (after seed)**
 | Role   | Email               | Password   |
 |--------|---------------------|------------|
 | Admin  | admin@aether.news   | Admin123!  |
 | Editor | editor@aether.news  | Editor123! |
 
-### Backend
-
-```bash
-cd server && cp .env.example .env && npm install && npm run seed && npm run dev
-```
-
 ---
 
-## Admin features (Phase 5)
+## What is integrated (Phase 6)
 
-- Overview with stats
-- Articles list (search, filter, delete)
-- Multilingual article editor (EN / AR tabs, SEO fields, featured/trending/breaking)
-- Categories CRUD (bilingual)
-- Users list (admin only)
-- Analytics snapshot
-- Media & Settings placeholders
-- Role-based access (admin / editor)
-
----
-
-## URL strategy
-
-```
-/en, /ar
-/en/article/slug
-/ar/article/slug-ar
-/admin
-```
+- JWT auth (httpOnly cookie) end-to-end
+- Public homepage, categories, article detail, search → live API
+- Admin articles CRUD → API
+- Admin categories CRUD → API
+- Bookmarks API from article page
+- Loading / error / retry states
+- Axios client with credentials
 
 ---
 
@@ -68,7 +67,7 @@ cd server && cp .env.example .env && npm install && npm run seed && npm run dev
 | 3 — Backend | ✅ |
 | 4 — Multilingual Content | ✅ |
 | 5 — Admin Dashboard | ✅ |
-| 6 — Integration | Pending |
+| 6 — Integration | ✅ |
 | 7 — Polish & Quality | Pending |
 
 ---
