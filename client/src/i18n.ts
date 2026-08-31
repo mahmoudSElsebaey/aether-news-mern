@@ -6,11 +6,13 @@ import enCommon from "./locales/en/common.json";
 import enNavigation from "./locales/en/navigation.json";
 import enHome from "./locales/en/home.json";
 import enArticles from "./locales/en/articles.json";
+import enDashboard from "./locales/en/dashboard.json";
 
 import arCommon from "./locales/ar/common.json";
 import arNavigation from "./locales/ar/navigation.json";
 import arHome from "./locales/ar/home.json";
 import arArticles from "./locales/ar/articles.json";
+import arDashboard from "./locales/ar/dashboard.json";
 
 const resources = {
   en: {
@@ -18,12 +20,14 @@ const resources = {
     navigation: enNavigation,
     home: enHome,
     articles: enArticles,
+    dashboard: enDashboard,
   },
   ar: {
     common: arCommon,
     navigation: arNavigation,
     home: arHome,
     articles: arArticles,
+    dashboard: arDashboard,
   },
 };
 
@@ -34,7 +38,7 @@ i18n
     resources,
     fallbackLng: "en",
     defaultNS: "common",
-    ns: ["common", "navigation", "home", "articles"],
+    ns: ["common", "navigation", "home", "articles", "dashboard"],
     interpolation: {
       escapeValue: false,
     },
