@@ -5,7 +5,7 @@ Modern production-ready News & Media platform built with the **MERN stack**.
 **Languages:** Arabic (RTL) · English (LTR)  
 **Stack:** React 19 · TypeScript · Tailwind CSS · Node.js · Express · MongoDB
 
-**Live repo:** https://github.com/mahmoudSElsebaey/aether-news-mern
+**Repo:** https://github.com/mahmoudSElsebaey/aether-news-mern
 
 ---
 
@@ -22,12 +22,37 @@ Modern production-ready News & Media platform built with the **MERN stack**.
 ```
 aether-news-mern/
 ├── client/          # React + TypeScript + Vite + Tailwind
-└── server/          # Express + MongoDB (Phase 3+)
+└── server/          # Express + MongoDB + Mongoose
 ```
 
 ---
 
-## Getting Started (Client)
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- MongoDB (local or Atlas)
+
+### 1. Backend
+
+```bash
+cd server
+cp .env.example .env
+# Edit MONGODB_URI and JWT_SECRET
+npm install
+npm run seed
+npm run dev
+```
+
+API: http://localhost:5000/api/health
+
+**Seed accounts**
+| Role   | Email               | Password   |
+|--------|---------------------|------------|
+| Admin  | admin@aether.news   | Admin123!  |
+| Editor | editor@aether.news  | Editor123! |
+
+### 2. Frontend
 
 ```bash
 cd client
@@ -36,21 +61,34 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173
+App: http://localhost:5173
 
 ---
 
-## What works now (Phase 2)
+## API Overview
 
-- Full editorial homepage (Breaking ticker, Hero, Featured, Latest, Trending, category sections)
-- Category pages (`/sports`, `/football`, `/technology`, `/business`)
-- Article detail page with related + trending sidebar
-- News listing + search with filters, sort, pagination (`/news`, `/search`)
-- Full Arabic / English UI with RTL / LTR
-- Language switcher
-- Responsive layout (mobile → desktop)
-- Framer Motion scroll reveals
-- Mock multilingual article content
+```
+POST   /api/auth/register
+POST   /api/auth/login
+POST   /api/auth/logout
+GET    /api/auth/me
+
+GET    /api/articles?language=ar&category=sports&page=1&sort=latest
+GET    /api/articles/:slug
+POST   /api/articles          (editor|admin)
+PATCH  /api/articles/:id      (editor|admin)
+DELETE /api/articles/:id      (editor|admin)
+
+GET    /api/categories
+GET    /api/categories/:slug
+POST   /api/categories        (admin)
+
+GET    /api/bookmarks         (auth)
+POST   /api/bookmarks         (auth)
+DELETE /api/bookmarks/:articleId
+
+GET    /api/users             (admin)
+```
 
 ---
 
@@ -58,10 +96,10 @@ Open http://localhost:5173
 
 | Phase | Status |
 |-------|--------|
-| 0 — Discovery & Architecture | ✅ Done |
-| 1 — Brand & Design System | ✅ Done |
-| 2 — Public Website | ✅ Done |
-| 3 — Backend | Pending |
+| 0 — Discovery & Architecture | ✅ |
+| 1 — Brand & Design System | ✅ |
+| 2 — Public Website | ✅ |
+| 3 — Backend | ✅ |
 | 4 — Multilingual Content System | Pending |
 | 5 — Admin Dashboard | Pending |
 | 6 — Integration | Pending |
