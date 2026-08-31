@@ -1,14 +1,16 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
 import { LocaleRedirect } from "@/components/routing/LocaleRedirect";
 import { LocaleSync } from "@/components/routing/LocaleSync";
+import { isLocale } from "@/utils/locale";
 import { HomePage } from "@/pages/HomePage";
 import { ArticlePage } from "@/pages/ArticlePage";
 import { CategoryPage } from "@/pages/CategoryPage";
 import { NewsListingPage } from "@/pages/NewsListingPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { LoginPage } from "@/pages/admin/LoginPage";
 import { OverviewPage } from "@/pages/admin/OverviewPage";
 import { ArticlesPage } from "@/pages/admin/ArticlesPage";
@@ -20,6 +22,10 @@ import { AnalyticsPage } from "@/pages/admin/AnalyticsPage";
 import { SettingsPage } from "@/pages/admin/SettingsPage";
 
 function LocaleLayout() {
+  const { lang } = useParams();
+  if (!isLocale(lang)) {
+    return <Navigate to="/en" replace />;
+  }
   return (
     <>
       <LocaleSync />
@@ -33,7 +39,6 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Admin (no locale prefix) */}
           <Route path="/admin/login" element={<LoginPage />} />
           <Route
             path="/admin"
@@ -61,13 +66,13 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 
-          {/* Public locale-prefixed app */}
           <Route path=":lang" element={<LocaleLayout />}>
             <Route index element={<HomePage />} />
             <Route path="news" element={<NewsListingPage />} />
             <Route path="search" element={<NewsListingPage />} />
             <Route path="article/:slug" element={<ArticlePage />} />
             <Route path=":slug" element={<CategoryPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
 
           <Route path="/" element={<LocaleRedirect />} />

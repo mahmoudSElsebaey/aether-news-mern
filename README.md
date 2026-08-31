@@ -1,30 +1,44 @@
 # Aether News — Multilingual News & Sports Media SaaS
 
-Modern production-ready News & Media platform built with the **MERN stack**.
+Production-oriented News & Media platform built with the **MERN stack**.
 
 **Languages:** Arabic (RTL) · English (LTR)  
 **Stack:** React 19 · TypeScript · Tailwind CSS · Node.js · Express · MongoDB
 
-**Repo:** https://github.com/mahmoudSElsebaey/aether-news-mern
+**Repository:** https://github.com/mahmoudSElsebaey/aether-news-mern
 
 ---
 
-## Quick start (full stack)
+## Features
 
-### 1. Backend
+- Editorial public site (hero, breaking ticker, trending, categories)
+- Full Arabic / English UI + content with `/en` and `/ar` URLs
+- SEO: canonical, hreflang, Open Graph, JSON-LD, sitemap, robots
+- Admin dashboard (articles, categories, analytics, roles)
+- Multilingual article editor
+- JWT auth (httpOnly cookies) + role-based access
+- Bookmarks API
+- Rate limiting, Helmet, centralized validation (Zod)
+
+---
+
+## Quick start
+
+### Backend
 
 ```bash
 cd server
 cp .env.example .env
-# Set MONGODB_URI and JWT_SECRET
+# MONGODB_URI=...  JWT_SECRET=...  CLIENT_URL=http://localhost:5173
 npm install
 npm run seed
 npm run dev
 ```
 
-API: http://localhost:5000/api/health
+- Health: http://localhost:5000/api/health
+- Sitemap: http://localhost:5000/api/sitemap.xml
 
-### 2. Frontend
+### Frontend
 
 ```bash
 cd client
@@ -34,10 +48,9 @@ npm install
 npm run dev
 ```
 
-- Public: http://localhost:5173 → `/en` or `/ar`
+- Site: http://localhost:5173
 - Admin: http://localhost:5173/admin/login
 
-**Accounts (after seed)**
 | Role   | Email               | Password   |
 |--------|---------------------|------------|
 | Admin  | admin@aether.news   | Admin123!  |
@@ -45,15 +58,13 @@ npm run dev
 
 ---
 
-## What is integrated (Phase 6)
+## Project structure
 
-- JWT auth (httpOnly cookie) end-to-end
-- Public homepage, categories, article detail, search → live API
-- Admin articles CRUD → API
-- Admin categories CRUD → API
-- Bookmarks API from article page
-- Loading / error / retry states
-- Axios client with credentials
+```
+aether-news-mern/
+├── client/   # Vite + React + TypeScript + Tailwind
+└── server/   # Express + Mongoose
+```
 
 ---
 
@@ -61,14 +72,14 @@ npm run dev
 
 | Phase | Status |
 |-------|--------|
-| 0 — Discovery | ✅ |
+| 0 — Discovery & Architecture | ✅ |
 | 1 — Brand & Design System | ✅ |
 | 2 — Public Website | ✅ |
 | 3 — Backend | ✅ |
 | 4 — Multilingual Content | ✅ |
 | 5 — Admin Dashboard | ✅ |
 | 6 — Integration | ✅ |
-| 7 — Polish & Quality | Pending |
+| 7 — Polish & Quality | ✅ |
 
 ---
 

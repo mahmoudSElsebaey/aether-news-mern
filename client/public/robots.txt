@@ -1,8 +1,9 @@
 User-agent: *
 Allow: /
-
-# Prefer localized entry points
 Allow: /en/
 Allow: /ar/
+Disallow: /admin/
 
-Sitemap: /sitemap.xml
+# Prefer API sitemap when backend is deployed alongside the client domain,
+# or configure your reverse proxy to expose /api/sitemap.xml
+Sitemap: /api/sitemap.xml

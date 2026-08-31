@@ -20,6 +20,10 @@ const populateFields = [
   { path: "author", select: "name avatar bio preferredLanguage" },
 ];
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function listArticles(query) {
   const {
     language = "en",
@@ -43,14 +47,26 @@ export async function listArticles(query) {
 
   if (category) {
     const cat = await Category.findOne({
-      $or: [{ slug: category }, { "translations.en.slug": category }, { "translations.ar.slug": category }],
+      $or: [
+        { slug: category },
+        { "translations.en.slug": category },
+        { "translations.ar.slug": category },
+      ],
     });
     if (cat) filter.category = cat._id;
-    else filter.category = null; // force empty
+    else filter.category = null;
   }
 
-  if (search) {
-    filter.$text = { $search: search };
+  if (search?.trim()) {
+    const q = escapeRegex(search.trim());
+    // Regex fallback is more reliable across en/ar than $text alone
+    filter.$or = [
+      { "translations.en.title": { $regex: q, $options: "i" } },
+      { "translations.en.excerpt": { $regex: q, $options: "i" } },
+      { "translations.ar.title": { $regex: q, $options: "i" } },
+      { "translations.ar.excerpt": { $regex: q, $options: "i" } },
+      { tags: { $regex: q, $options: "i" } },
+    ];
   }
 
   let sortOption = { publishedAt: -1 };
@@ -111,7 +127,6 @@ export async function createArticle(data, authorId) {
 
   const translations = ensureSlugs(data.translations);
 
-  // uniqueness check
   const clash = await Article.findOne({
     $or: [
       { "translations.en.slug": translations.en.slug },
@@ -148,8 +163,14 @@ export async function updateArticle(id, data) {
 
   if (data.translations) {
     const merged = {
-      en: { ...article.translations.en.toObject?.() || article.translations.en, ...data.translations.en },
-      ar: { ...article.translations.ar.toObject?.() || article.translations.ar, ...data.translations.ar },
+      en: {
+        ...(article.translations.en.toObject?.() || article.translations.en),
+        ...data.translations.en,
+      },
+      ar: {
+        ...(article.translations.ar.toObject?.() || article.translations.ar),
+        ...data.translations.ar,
+      },
     };
     article.translations = ensureSlugs(merged);
   }
