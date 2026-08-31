@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as articlesApi from "@/services/articles.api";
 import * as categoriesApi from "@/services/categories.api";
+import { uploadImage, resolveMediaUrl } from "@/services/upload.api";
 import type { ArticleStatus } from "@/types/article";
 import type { ApiCategory } from "@/types/api";
 import { Button } from "@/components/ui/Button";
@@ -44,6 +45,7 @@ export function ArticleEditorPage() {
   const isNew = !id || id === "new";
   const { t } = useTranslation("dashboard");
   const navigate = useNavigate();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [tab, setTab] = useState<LangTab>("en");
   const [en, setEn] = useState<TranslationForm>(emptyTranslation);
@@ -51,6 +53,8 @@ export function ArticleEditorPage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [coverImage, setCoverImage] = useState("");
+  const [coverMode, setCoverMode] = useState<"url" | "upload">("url");
+  const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<ArticleStatus>("draft");
   const [isFeatured, setIsFeatured] = useState(false);
   const [isTrending, setIsTrending] = useState(false);
@@ -122,16 +126,24 @@ export function ArticleEditorPage() {
     });
   };
 
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const url = await uploadImage(file);
+      setCoverImage(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const buildPayload = (finalStatus: ArticleStatus) => ({
     translations: {
-      en: {
-        ...en,
-        slug: en.slug || slugify(en.title) || undefined,
-      },
-      ar: {
-        ...ar,
-        slug: ar.slug || slugify(ar.title) || undefined,
-      },
+      en: { ...en, slug: en.slug || slugify(en.title) || undefined },
+      ar: { ...ar, slug: ar.slug || slugify(ar.title) || undefined },
     },
     category: categoryId,
     coverImage: coverImage || "",
@@ -169,6 +181,8 @@ export function ArticleEditorPage() {
   };
 
   if (loading) return <PageLoader />;
+
+  const previewSrc = resolveMediaUrl(coverImage);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -293,20 +307,77 @@ export function ArticleEditorPage() {
                 ))}
               </select>
             </Field>
-            <Field label={t("coverImage")}>
+
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-primary">{t("coverImage")}</p>
+              <div className="flex rounded-md border border-border overflow-hidden mb-2">
+                <button
+                  type="button"
+                  onClick={() => setCoverMode("url")}
+                  className={cn(
+                    "flex-1 h-9 text-xs font-medium",
+                    coverMode === "url" ? "bg-primary text-white" : "bg-surface text-muted"
+                  )}
+                >
+                  URL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCoverMode("upload")}
+                  className={cn(
+                    "flex-1 h-9 text-xs font-medium",
+                    coverMode === "upload" ? "bg-primary text-white" : "bg-surface text-muted"
+                  )}
+                >
+                  Upload
+                </button>
+              </div>
+
+              {coverMode === "url" ? (
+                <input
+                  value={coverImage}
+                  onChange={(e) => setCoverImage(e.target.value)}
+                  className="field-input"
+                  dir="ltr"
+                  placeholder="https://... or /uploads/..."
+                />
+              ) : (
+                <div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    fullWidth
+                    isLoading={uploading}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    {uploading ? "Uploading…" : "Choose image"}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {previewSrc && (
+              <img
+                src={previewSrc}
+                alt=""
+                className="rounded-md aspect-video object-cover w-full border border-border"
+              />
+            )}
+
+            <Field label={t("tags")}>
               <input
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
                 className="field-input"
                 dir="ltr"
-                placeholder="https://..."
               />
-            </Field>
-            {coverImage && (
-              <img src={coverImage} alt="" className="rounded-md aspect-video object-cover w-full" />
-            )}
-            <Field label={t("tags")}>
-              <input value={tags} onChange={(e) => setTags(e.target.value)} className="field-input" dir="ltr" />
             </Field>
             <div className="space-y-2 pt-2">
               <Toggle label={t("featured")} checked={isFeatured} onChange={setIsFeatured} />
