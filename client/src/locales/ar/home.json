@@ -1,0 +1,14 @@
+{
+  "hero": {
+    "badge": "قصة مميزة"
+  },
+  "breaking": "عاجل",
+  "featured": "مميز",
+  "latest": "أحدث الأخبار",
+  "trending": "الأكثر رواجاً",
+  "sports": "رياضة",
+  "football": "كرة القدم",
+  "technology": "تكنولوجيا",
+  "business": "أعمال",
+  "moreIn": "المزيد في {{category}}"
+}

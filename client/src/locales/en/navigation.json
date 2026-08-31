@@ -1,0 +1,19 @@
+{
+  "home": "Home",
+  "news": "News",
+  "sports": "Sports",
+  "football": "Football",
+  "technology": "Technology",
+  "business": "Business",
+  "categories": "Categories",
+  "search": "Search",
+  "login": "Log in",
+  "register": "Sign up",
+  "logout": "Log out",
+  "profile": "Profile",
+  "bookmarks": "Bookmarks",
+  "dashboard": "Dashboard",
+  "admin": "Admin",
+  "menu": "Menu",
+  "closeMenu": "Close menu"
+}

@@ -1,0 +1,21 @@
+{
+  "relatedTitle": "Related articles",
+  "trendingTitle": "Trending",
+  "shareTitle": "Share this article",
+  "readingTime": "{{count}} min read",
+  "prevArticle": "Previous article",
+  "nextArticle": "Next article",
+  "comments": "Comments",
+  "noComments": "No comments yet",
+  "writeComment": "Write a comment",
+  "filters": {
+    "all": "All",
+    "featured": "Featured",
+    "trending": "Trending"
+  },
+  "sort": {
+    "latest": "Latest",
+    "popular": "Most viewed",
+    "trending": "Trending"
+  }
+}

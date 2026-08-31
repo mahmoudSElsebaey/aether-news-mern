@@ -1,0 +1,21 @@
+{
+  "relatedTitle": "مقالات ذات صلة",
+  "trendingTitle": "الأكثر رواجاً",
+  "shareTitle": "شارك هذا المقال",
+  "readingTime": "{{count}} دقائق قراءة",
+  "prevArticle": "المقال السابق",
+  "nextArticle": "المقال التالي",
+  "comments": "التعليقات",
+  "noComments": "لا توجد تعليقات بعد",
+  "writeComment": "اكتب تعليقاً",
+  "filters": {
+    "all": "الكل",
+    "featured": "مميز",
+    "trending": "رائج"
+  },
+  "sort": {
+    "latest": "الأحدث",
+    "popular": "الأكثر مشاهدة",
+    "trending": "الأكثر رواجاً"
+  }
+}

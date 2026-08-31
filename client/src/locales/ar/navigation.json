@@ -1,0 +1,19 @@
+{
+  "home": "الرئيسية",
+  "news": "الأخبار",
+  "sports": "رياضة",
+  "football": "كرة القدم",
+  "technology": "تكنولوجيا",
+  "business": "أعمال",
+  "categories": "الأقسام",
+  "search": "بحث",
+  "login": "تسجيل الدخول",
+  "register": "إنشاء حساب",
+  "logout": "تسجيل الخروج",
+  "profile": "الملف الشخصي",
+  "bookmarks": "المحفوظات",
+  "dashboard": "لوحة التحكم",
+  "admin": "الإدارة",
+  "menu": "القائمة",
+  "closeMenu": "إغلاق القائمة"
+}

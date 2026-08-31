@@ -1,0 +1,14 @@
+{
+  "hero": {
+    "badge": "Featured Story"
+  },
+  "breaking": "Breaking",
+  "featured": "Featured",
+  "latest": "Latest News",
+  "trending": "Trending Now",
+  "sports": "Sports",
+  "football": "Football",
+  "technology": "Technology",
+  "business": "Business",
+  "moreIn": "More in {{category}}"
+}

@@ -1,0 +1,60 @@
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
+
+import enCommon from "./locales/en/common.json";
+import enNavigation from "./locales/en/navigation.json";
+import enHome from "./locales/en/home.json";
+import enArticles from "./locales/en/articles.json";
+
+import arCommon from "./locales/ar/common.json";
+import arNavigation from "./locales/ar/navigation.json";
+import arHome from "./locales/ar/home.json";
+import arArticles from "./locales/ar/articles.json";
+
+const resources = {
+  en: {
+    common: enCommon,
+    navigation: enNavigation,
+    home: enHome,
+    articles: enArticles,
+  },
+  ar: {
+    common: arCommon,
+    navigation: arNavigation,
+    home: arHome,
+    articles: arArticles,
+  },
+};
+
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources,
+    fallbackLng: "en",
+    defaultNS: "common",
+    ns: ["common", "navigation", "home", "articles"],
+    interpolation: {
+      escapeValue: false,
+    },
+    detection: {
+      order: ["localStorage", "navigator"],
+      caches: ["localStorage"],
+      lookupLocalStorage: "aether_lang",
+    },
+  });
+
+/** Keep <html> lang & dir in sync with current language */
+const applyDocumentDirection = (lng: string) => {
+  const isRtl = lng === "ar";
+  document.documentElement.lang = lng;
+  document.documentElement.dir = isRtl ? "rtl" : "ltr";
+};
+
+// Initial apply
+applyDocumentDirection(i18n.language || "en");
+
+i18n.on("languageChanged", applyDocumentDirection);
+
+export default i18n;
