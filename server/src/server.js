@@ -5,7 +5,7 @@ import { env } from "./config/env.js";
 async function boot() {
   await connectDB();
   app.listen(env.port, () => {
-    console.log(`[server] Aether News API on http://localhost:${env.port}`);
+    console.log(`[server] Delta News API on http://localhost:${env.port}`);
   });
 }
 

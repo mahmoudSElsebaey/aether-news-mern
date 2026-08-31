@@ -3,7 +3,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { success, created } from "../utils/response.js";
 
 export const list = asyncHandler(async (req, res) => {
-  const result = await articleService.listArticles(req.query);
+  const query = req.validatedQuery || req.query;
+  const result = await articleService.listArticles(query);
   return success(res, result.items, result.meta);
 });
 
