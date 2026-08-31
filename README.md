@@ -9,86 +9,65 @@ Modern production-ready News & Media platform built with the **MERN stack**.
 
 ---
 
-## Brand
-
-- **Name:** Aether News / أثير نيوز
-- **Primary:** Deep Ink `#0B1220`
-- **Accent:** Signal Red `#E11D48`
-
----
-
-## URL strategy (multilingual SEO)
-
-```
-/en                  Home (English, LTR)
-/ar                  Home (Arabic, RTL)
-/en/sports           Category
-/ar/sports
-/en/article/slug     Article (language-specific slug)
-/ar/article/slug-ar
-/en/news?q=...       Listing + search
-```
-
-- `hreflang` alternates for `en`, `ar`, and `x-default`
-- Canonical per language
-- Open Graph + Twitter cards
-- JSON-LD `NewsArticle` on article pages
-- `robots.txt` allows `/en/` and `/ar/`
-
----
-
-## Getting Started
-
-### Backend
-
-```bash
-cd server
-cp .env.example .env
-npm install
-npm run seed
-npm run dev
-```
+## Quick start
 
 ### Frontend
 
 ```bash
-cd client
-cp .env.example .env
-npm install
-npm run dev
+cd client && npm install && npm run dev
 ```
 
-Open http://localhost:5173 → redirects to `/en` or `/ar`.
+- Public site: http://localhost:5173 → `/en` or `/ar`
+- Admin: http://localhost:5173/admin/login
 
-**Seed accounts**
+**Admin demo accounts**
 | Role   | Email               | Password   |
 |--------|---------------------|------------|
 | Admin  | admin@aether.news   | Admin123!  |
 | Editor | editor@aether.news  | Editor123! |
 
----
+### Backend
 
-## API Overview
-
-```
-GET /api/articles?language=ar&category=sports&page=1
-GET /api/articles/:slug
-POST /api/auth/login
-...
+```bash
+cd server && cp .env.example .env && npm install && npm run seed && npm run dev
 ```
 
 ---
 
-## Development Phases
+## Admin features (Phase 5)
+
+- Overview with stats
+- Articles list (search, filter, delete)
+- Multilingual article editor (EN / AR tabs, SEO fields, featured/trending/breaking)
+- Categories CRUD (bilingual)
+- Users list (admin only)
+- Analytics snapshot
+- Media & Settings placeholders
+- Role-based access (admin / editor)
+
+---
+
+## URL strategy
+
+```
+/en, /ar
+/en/article/slug
+/ar/article/slug-ar
+/admin
+```
+
+---
+
+## Phases
 
 | Phase | Status |
 |-------|--------|
-| 0 — Discovery & Architecture | ✅ |
+| 0 — Discovery | ✅ |
 | 1 — Brand & Design System | ✅ |
 | 2 — Public Website | ✅ |
 | 3 — Backend | ✅ |
-| 4 — Multilingual Content System | ✅ |
-| 5 — Admin Dashboard | Pending |
+| 4 — Multilingual Content | ✅ |
+| 5 — Admin Dashboard | ✅ |
 | 6 — Integration | Pending |
 | 7 — Polish & Quality | Pending |
 
