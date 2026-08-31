@@ -20,6 +20,7 @@ export function HeroArticle({ article }: HeroArticleProps) {
   const { t } = useTranslation(["common", "home"]);
   const localized = getLocalizedArticle(article, locale);
   const path = getArticlePath(article, locale);
+  const catPath = getCategoryPath(article.category.slug, locale);
   const catName = article.category.translations[locale].name;
 
   return (
@@ -30,7 +31,6 @@ export function HeroArticle({ article }: HeroArticleProps) {
       className="relative overflow-hidden rounded-xl bg-primary"
     >
       <div className="grid lg:grid-cols-2 min-h-[380px] md:min-h-[440px]">
-        {/* Image */}
         <Link to={path} className="relative order-1 lg:order-2 min-h-[220px] lg:min-h-full">
           <img
             src={article.coverImage}
@@ -41,13 +41,12 @@ export function HeroArticle({ article }: HeroArticleProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent lg:bg-gradient-to-l lg:from-transparent lg:via-transparent lg:to-primary/40" />
         </Link>
 
-        {/* Content */}
         <div className="relative order-2 lg:order-1 flex flex-col justify-end p-6 md:p-8 lg:p-10 text-white">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {article.isBreaking && <Badge variant="breaking">{t("common:breaking")}</Badge>}
             <Badge variant="featured">{t("home:hero.badge")}</Badge>
             <Link
-              to={getCategoryPath(article.category.slug)}
+              to={catPath}
               className="text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-white"
             >
               {catName}

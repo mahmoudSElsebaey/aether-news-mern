@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineMenuAlt3, HiOutlineX, HiOutlineSearch } from "react-icons/hi";
 import { Logo } from "@/components/brand/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { LocaleLink } from "@/components/routing/LocaleLink";
 import { Button } from "@/components/ui/Button";
+import { useLocale } from "@/hooks/useLocale";
+import { localizedPath } from "@/utils/locale";
 import { cn } from "@/utils/cn";
 
 const navItems = [
@@ -18,11 +21,11 @@ const navItems = [
 
 export function Navbar() {
   const { t } = useTranslation("navigation");
+  const locale = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      {/* Top thin bar */}
       <div className="bg-primary text-white">
         <div className="container-aether flex h-8 items-center justify-between text-xs">
           <span className="font-medium tracking-wide opacity-90">
@@ -37,17 +40,15 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main bar */}
       <div className="container-aether">
         <div className="flex h-16 items-center justify-between gap-4">
           <Logo size="md" />
 
-          {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1" aria-label="Main">
             {navItems.map((item) => (
               <NavLink
                 key={item.key}
-                to={item.path}
+                to={localizedPath(item.path, locale)}
                 className={({ isActive }) =>
                   cn(
                     "px-3 py-2 text-sm font-medium rounded-md transition-colors",
@@ -63,15 +64,14 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
-            <Link
+            <LocaleLink
               to="/search"
               className="p-2 rounded-md text-muted hover:text-primary hover:bg-surface transition-colors"
               aria-label={t("search")}
             >
               <HiOutlineSearch className="size-5" />
-            </Link>
+            </LocaleLink>
 
             <div className="hidden sm:block lg:hidden">
               <LanguageSwitcher compact />
@@ -86,7 +86,6 @@ export function Navbar() {
               </Button>
             </div>
 
-            {/* Mobile toggle */}
             <button
               type="button"
               className="lg:hidden p-2 rounded-md text-primary hover:bg-surface"
@@ -94,17 +93,12 @@ export function Navbar() {
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? t("closeMenu") : t("menu")}
             >
-              {mobileOpen ? (
-                <HiOutlineX className="size-6" />
-              ) : (
-                <HiOutlineMenuAlt3 className="size-6" />
-              )}
+              {mobileOpen ? <HiOutlineX className="size-6" /> : <HiOutlineMenuAlt3 className="size-6" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
       <div
         className={cn(
           "lg:hidden border-t border-border bg-card overflow-hidden transition-all duration-300",
@@ -115,7 +109,7 @@ export function Navbar() {
           {navItems.map((item) => (
             <NavLink
               key={item.key}
-              to={item.path}
+              to={localizedPath(item.path, locale)}
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 cn(
@@ -129,14 +123,14 @@ export function Navbar() {
             </NavLink>
           ))}
 
-          <Link
+          <LocaleLink
             to="/search"
             onClick={() => setMobileOpen(false)}
             className="px-3 py-2.5 text-base font-medium rounded-md text-primary hover:bg-surface flex items-center gap-2"
           >
             <HiOutlineSearch className="size-5" />
             {t("search")}
-          </Link>
+          </LocaleLink>
 
           <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2">
             <LanguageSwitcher />

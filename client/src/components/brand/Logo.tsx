@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { LocaleLink } from "@/components/routing/LocaleLink";
 import { cn } from "@/utils/cn";
 
 interface LogoProps {
@@ -14,19 +14,17 @@ const sizeMap = {
   lg: { icon: 44, text: "text-2xl" },
 };
 
-/** Aether News wordmark + mark */
 export function Logo({ className, showWordmark = true, size = "md" }: LogoProps) {
   const { t, i18n } = useTranslation("common");
   const { icon, text } = sizeMap[size];
-  const isAr = i18n.language === "ar";
+  const isAr = i18n.language?.startsWith("ar");
 
   return (
-    <Link
+    <LocaleLink
       to="/"
       className={cn("inline-flex items-center gap-2.5 group", className)}
       aria-label={t("brand")}
     >
-      {/* Mark */}
       <svg
         width={icon}
         height={icon}
@@ -45,16 +43,10 @@ export function Logo({ className, showWordmark = true, size = "md" }: LogoProps)
       </svg>
 
       {showWordmark && (
-        <span
-          className={cn(
-            "font-bold tracking-tight text-primary",
-            text,
-            isAr && "font-arabic"
-          )}
-        >
+        <span className={cn("font-bold tracking-tight text-primary", text, isAr && "font-arabic")}>
           {t("brand")}
         </span>
       )}
-    </Link>
+    </LocaleLink>
   );
 }

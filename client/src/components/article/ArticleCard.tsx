@@ -29,6 +29,7 @@ export function ArticleCard({
   const { t } = useTranslation("common");
   const localized = getLocalizedArticle(article, locale);
   const path = getArticlePath(article, locale);
+  const catPath = getCategoryPath(article.category.slug, locale);
   const catName = article.category.translations[locale].name;
 
   if (variant === "horizontal") {
@@ -51,7 +52,7 @@ export function ArticleCard({
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex items-center gap-2 flex-wrap">
             <Link
-              to={getCategoryPath(article.category.slug)}
+              to={catPath}
               className="text-xs font-semibold uppercase tracking-wide text-accent hover:underline"
             >
               {catName}
@@ -64,7 +65,8 @@ export function ArticleCard({
             </h3>
           </Link>
           <p className="text-xs text-muted">
-            {formatRelativeTime(article.publishedAt, locale)} · {article.readingTime} {locale === "ar" ? "د" : "min"}
+            {formatRelativeTime(article.publishedAt, locale)} · {article.readingTime}{" "}
+            {locale === "ar" ? "د" : "min"}
           </p>
         </div>
       </motion.article>
@@ -94,7 +96,6 @@ export function ArticleCard({
     );
   }
 
-  // default + featured
   const isFeatured = variant === "featured";
 
   return (
@@ -105,13 +106,7 @@ export function ArticleCard({
       transition={{ duration: 0.4 }}
       className={cn("group flex flex-col", className)}
     >
-      <Link
-        to={path}
-        className={cn(
-          "relative overflow-hidden rounded-lg bg-slate-200",
-          isFeatured ? "aspect-[16/10]" : "aspect-[16/10]"
-        )}
-      >
+      <Link to={path} className="relative aspect-[16/10] overflow-hidden rounded-lg bg-slate-200">
         <img
           src={article.coverImage}
           alt=""
@@ -132,7 +127,7 @@ export function ArticleCard({
       <div className="mt-3 flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <Link
-            to={getCategoryPath(article.category.slug)}
+            to={catPath}
             className="text-xs font-semibold uppercase tracking-wide text-accent hover:underline"
           >
             {catName}
@@ -159,7 +154,8 @@ export function ArticleCard({
         )}
 
         <p className="text-xs text-muted mt-1">
-          {article.author.name} · {article.readingTime} {locale === "ar" ? "دقائق" : "min read"}
+          {article.author.name} · {article.readingTime}{" "}
+          {locale === "ar" ? "دقائق" : "min read"}
         </p>
       </div>
     </motion.article>
