@@ -1,71 +1,102 @@
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/Badge";
+import {
+  getFeaturedArticles,
+  getTrendingArticles,
+  getBreakingArticles,
+  getLatestArticles,
+  getArticlesByCategory,
+} from "@/data/articles";
+import { BreakingTicker } from "@/components/article/BreakingTicker";
+import { HeroArticle } from "@/components/article/HeroArticle";
+import { ArticleCard } from "@/components/article/ArticleCard";
+import { CategorySection } from "@/components/home/CategorySection";
+import { TrendingSidebar } from "@/components/home/TrendingSidebar";
+import { NewsletterCTA } from "@/components/home/NewsletterCTA";
+import { SectionTitle } from "@/components/common/SectionTitle";
 
-/** Temporary homepage shell for Phase 1 — full editorial layout in Phase 2 */
 export function HomePage() {
-  const { t } = useTranslation(["home", "common"]);
+  const { t } = useTranslation("home");
+
+  const featured = getFeaturedArticles();
+  const trending = getTrendingArticles();
+  const breaking = getBreakingArticles();
+  const latest = getLatestArticles(8);
+  const sports = getArticlesByCategory("sports");
+  const football = getArticlesByCategory("football");
+  const technology = getArticlesByCategory("technology");
+  const business = getArticlesByCategory("business");
+
+  const hero = featured[0] ?? latest[0];
+  const sideFeatured = featured.slice(1, 4);
 
   return (
-    <div className="container-aether py-10">
-      {/* Breaking ticker placeholder */}
-      <div className="mb-8 flex items-center gap-3 overflow-hidden rounded-md border border-border bg-card px-4 py-2.5">
-        <Badge variant="breaking">{t("home:breaking")}</Badge>
-        <p className="text-sm text-muted truncate">
-          Phase 1 complete — Brand & Design System foundation is ready.
-        </p>
+    <div className="pb-16">
+      {/* Breaking ticker */}
+      <div className="container-aether pt-6">
+        <BreakingTicker articles={breaking.length ? breaking : latest.slice(0, 3)} />
       </div>
 
-      {/* Hero placeholder */}
-      <section className="mb-12 grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-          <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-primary">
-            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
-              <Badge variant="featured" className="mb-3 w-fit">
-                {t("home:hero.badge")}
-              </Badge>
-              <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight max-w-2xl">
-                Welcome to Aether News
-              </h1>
-              <p className="mt-2 text-white/80 text-sm md:text-base max-w-xl">
-                A modern multilingual news platform. Full homepage arrives in Phase 2.
-              </p>
-            </div>
+      {/* Hero + side stories */}
+      <div className="container-aether mt-6">
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-8">{hero && <HeroArticle article={hero} />}</div>
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {sideFeatured.map((article) => (
+              <ArticleCard key={article.id} article={article} variant="horizontal" priority />
+            ))}
+            {sideFeatured.length === 0 &&
+              latest.slice(1, 4).map((article) => (
+                <ArticleCard key={article.id} article={article} variant="horizontal" />
+              ))}
           </div>
         </div>
+      </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="flex gap-3 rounded-lg border border-border bg-card p-3"
-            >
-              <div className="size-20 shrink-0 rounded-md bg-slate-200" />
-              <div className="flex flex-col justify-center gap-1.5 min-w-0">
-                <Badge variant="muted" className="w-fit">
-                  {t("home:trending")}
-                </Badge>
-                <p className="text-sm font-semibold text-primary line-clamp-2">
-                  Sample story placeholder #{i}
-                </p>
-              </div>
+      {/* Latest + Trending */}
+      <div className="container-aether mt-14">
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <SectionTitle title={t("latest")} href="/news" />
+            <div className="grid gap-6 sm:grid-cols-2">
+              {latest.slice(0, 6).map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Sections preview */}
-      <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-        {["sports", "football", "technology", "business"].map((cat) => (
-          <div key={cat} className="rounded-lg border border-border bg-card p-5">
-            <h2 className="text-lg font-bold text-primary mb-2">
-              {t(`home:${cat}`)}
-            </h2>
-            <p className="text-sm text-muted">
-              Category section will be fully designed in Phase 2.
-            </p>
           </div>
-        ))}
-      </section>
+          <div className="lg:col-span-4">
+            <TrendingSidebar articles={trending} />
+          </div>
+        </div>
+      </div>
+
+      {/* Category sections */}
+      <div className="container-aether mt-14 space-y-14">
+        <CategorySection
+          title={t("football")}
+          categorySlug="football"
+          articles={football}
+        />
+        <CategorySection
+          title={t("technology")}
+          categorySlug="technology"
+          articles={technology}
+        />
+        <CategorySection
+          title={t("sports")}
+          categorySlug="sports"
+          articles={sports.length ? sports : football}
+        />
+        <CategorySection
+          title={t("business")}
+          categorySlug="business"
+          articles={business}
+        />
+      </div>
+
+      {/* Newsletter */}
+      <div className="mt-16">
+        <NewsletterCTA />
+      </div>
     </div>
   );
 }
