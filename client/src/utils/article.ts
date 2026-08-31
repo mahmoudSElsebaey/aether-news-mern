@@ -1,4 +1,5 @@
 import type { Article, Locale } from "@/types/article";
+import { localizedPath } from "@/utils/locale";
 
 export function getLocalizedArticle(article: Article, locale: Locale) {
   return article.translations[locale];
@@ -6,10 +7,13 @@ export function getLocalizedArticle(article: Article, locale: Locale) {
 
 export function getArticlePath(article: Article, locale: Locale) {
   const slug = article.translations[locale].slug;
-  return `/article/${slug}`;
+  return localizedPath(`/article/${slug}`, locale);
 }
 
-export function getCategoryPath(slug: string) {
+export function getCategoryPath(slug: string, locale?: Locale) {
+  // locale optional for callers that only need relative segment;
+  // when locale provided, return full localized path
+  if (locale) return localizedPath(`/${slug}`, locale);
   return `/${slug}`;
 }
 

@@ -1,10 +1,13 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
+import { switchLocalePath, isLocale } from "@/utils/locale";
+import type { Locale } from "@/types/article";
 
-const languages = [
+const languages: { code: Locale; label: string; short: string }[] = [
   { code: "ar", label: "العربية", short: "ع" },
   { code: "en", label: "English", short: "EN" },
-] as const;
+];
 
 interface LanguageSwitcherProps {
   className?: string;
@@ -13,11 +16,20 @@ interface LanguageSwitcherProps {
 
 export function LanguageSwitcher({ className, compact = false }: LanguageSwitcherProps) {
   const { i18n } = useTranslation();
-  const current = i18n.language?.startsWith("ar") ? "ar" : "en";
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const switchTo = (code: string) => {
+  const current: Locale = isLocale(i18n.language)
+    ? i18n.language
+    : i18n.language?.startsWith("ar")
+      ? "ar"
+      : "en";
+
+  const switchTo = (code: Locale) => {
     if (code === current) return;
     i18n.changeLanguage(code);
+    const nextPath = switchLocalePath(location.pathname, code);
+    navigate(`${nextPath}${location.search}`, { replace: true });
   };
 
   return (
