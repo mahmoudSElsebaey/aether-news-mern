@@ -11,9 +11,11 @@ import { NewsletterCTA } from "@/components/home/NewsletterCTA";
 import { SectionTitle } from "@/components/common/SectionTitle";
 import { Seo } from "@/components/seo/Seo";
 import { PageLoader, ErrorState } from "@/components/ui/Spinner";
+import { LocaleLink } from "@/components/routing/LocaleLink";
+import { Button } from "@/components/ui/Button";
 
 export function HomePage() {
-  const { t } = useTranslation("home");
+  const { t } = useTranslation(["home", "common"]);
   const locale = useLocale();
 
   const { articles, loading, error, reload } = useArticles({
@@ -36,6 +38,26 @@ export function HomePage() {
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
+
+  if (articles.length === 0) {
+    return (
+      <div className="container-aether py-20 text-center">
+        <Seo path="/" />
+        <h1 className="text-2xl font-bold text-primary">Aether News</h1>
+        <p className="mt-2 text-muted">{t("common:noResults")}</p>
+        <p className="mt-1 text-sm text-muted">
+          {locale === "ar"
+            ? "شغّل الخادم ونفّذ npm run seed لإضافة محتوى تجريبي."
+            : "Start the API and run npm run seed to load sample content."}
+        </p>
+        <div className="mt-6">
+          <LocaleLink to="/news">
+            <Button variant="outline">{t("common:seeAll")}</Button>
+          </LocaleLink>
+        </div>
+      </div>
+    );
+  }
 
   const hero = featured[0] ?? latest[0];
   const sideFeatured = featured.slice(1, 4);
@@ -69,7 +91,7 @@ export function HomePage() {
       <div className="container-aether mt-14">
         <div className="grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-8">
-            <SectionTitle title={t("latest")} href="/news" />
+            <SectionTitle title={t("home:latest")} href="/news" />
             <div className="grid gap-6 sm:grid-cols-2">
               {latest.slice(0, 6).map((article) => (
                 <ArticleCard key={article.id} article={article} />
@@ -83,14 +105,18 @@ export function HomePage() {
       </div>
 
       <div className="container-aether mt-14 space-y-14">
-        <CategorySection title={t("football")} categorySlug="football" articles={football} />
-        <CategorySection title={t("technology")} categorySlug="technology" articles={technology} />
+        <CategorySection title={t("home:football")} categorySlug="football" articles={football} />
         <CategorySection
-          title={t("sports")}
+          title={t("home:technology")}
+          categorySlug="technology"
+          articles={technology}
+        />
+        <CategorySection
+          title={t("home:sports")}
           categorySlug="sports"
           articles={sports.length ? sports : football}
         />
-        <CategorySection title={t("business")} categorySlug="business" articles={business} />
+        <CategorySection title={t("home:business")} categorySlug="business" articles={business} />
       </div>
 
       <div className="mt-16">
