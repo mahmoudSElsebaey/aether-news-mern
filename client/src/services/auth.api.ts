@@ -1,58 +1,32 @@
-import { api, type ApiSuccess } from "./api";
-import type { AuthUser, UserRole } from "@/context/AuthContext";
+import { api } from "./api";
+import type { ApiResponse, ApiUser } from "@/types/api";
 
-interface AuthPayload {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    avatar?: string;
-    preferredLanguage?: "en" | "ar";
-  };
-  token: string;
+export async function loginRequest(email: string, password: string) {
+  const { data } = await api.post<ApiResponse<{ user: ApiUser; token: string }>>(
+    "/auth/login",
+    { email, password }
+  );
+  return data.data;
 }
 
-function toAuthUser(u: AuthPayload["user"]): AuthUser {
-  return {
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    role: u.role,
-    avatar: u.avatar,
-    preferredLanguage: u.preferredLanguage,
-  };
-}
-
-export async function apiLogin(email: string, password: string) {
-  const { data } = await api.post<ApiSuccess<AuthPayload>>("/auth/login", {
-    email,
-    password,
-  });
-  return {
-    user: toAuthUser(data.data.user),
-    token: data.data.token,
-  };
-}
-
-export async function apiRegister(payload: {
+export async function registerRequest(payload: {
   name: string;
   email: string;
   password: string;
-  preferredLanguage?: "en" | "ar";
+  preferredLanguage?: string;
 }) {
-  const { data } = await api.post<ApiSuccess<AuthPayload>>("/auth/register", payload);
-  return {
-    user: toAuthUser(data.data.user),
-    token: data.data.token,
-  };
+  const { data } = await api.post<ApiResponse<{ user: ApiUser; token: string }>>(
+    "/auth/register",
+    payload
+  );
+  return data.data;
 }
 
-export async function apiLogout() {
+export async function logoutRequest() {
   await api.post("/auth/logout");
 }
 
-export async function apiMe(): Promise<AuthUser> {
-  const { data } = await api.get<ApiSuccess<AuthPayload["user"]>>("/auth/me");
-  return toAuthUser(data.data);
+export async function meRequest() {
+  const { data } = await api.get<ApiResponse<ApiUser>>("/auth/me");
+  return data.data;
 }

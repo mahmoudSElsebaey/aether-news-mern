@@ -1,44 +1,41 @@
-import { api, type ApiSuccess } from "./api";
-import { mapArticle } from "./mappers";
-import type { Article } from "@/types/article";
-
-export interface ArticleListParams {
-  language?: string;
-  category?: string;
-  status?: string;
-  featured?: string;
-  trending?: string;
-  breaking?: string;
-  search?: string;
-  sort?: string;
-  page?: number;
-  limit?: number;
-}
+import { api } from "./api";
+import type { ApiArticle, ApiResponse, ArticleListParams } from "@/types/api";
 
 export async function fetchArticles(params: ArticleListParams = {}) {
-  const { data } = await api.get<ApiSuccess<unknown[]>>("/articles", { params });
-  const items = (data.data || []).map(mapArticle);
-  return { items, meta: data.meta };
+  const query: Record<string, string | number> = {};
+  if (params.language) query.language = params.language;
+  if (params.category) query.category = params.category;
+  if (params.status) query.status = params.status;
+  if (params.featured) query.featured = "true";
+  if (params.trending) query.trending = "true";
+  if (params.breaking) query.breaking = "true";
+  if (params.search) query.search = params.search;
+  if (params.sort) query.sort = params.sort;
+  if (params.page) query.page = params.page;
+  if (params.limit) query.limit = params.limit;
+
+  const { data } = await api.get<ApiResponse<ApiArticle[]>>("/articles", { params: query });
+  return { items: data.data, meta: data.meta };
 }
 
-export async function fetchArticleBySlug(slug: string): Promise<Article> {
-  const { data } = await api.get<ApiSuccess<unknown>>(`/articles/${encodeURIComponent(slug)}`);
-  return mapArticle(data.data);
+export async function fetchArticleBySlug(slug: string) {
+  const { data } = await api.get<ApiResponse<ApiArticle>>(`/articles/${encodeURIComponent(slug)}`);
+  return data.data;
 }
 
-export async function fetchArticleById(id: string): Promise<Article> {
-  const { data } = await api.get<ApiSuccess<unknown>>(`/articles/id/${id}`);
-  return mapArticle(data.data);
+export async function fetchArticleById(id: string) {
+  const { data } = await api.get<ApiResponse<ApiArticle>>(`/articles/id/${id}`);
+  return data.data;
 }
 
-export async function createArticle(payload: Record<string, unknown>) {
-  const { data } = await api.post<ApiSuccess<unknown>>("/articles", payload);
-  return mapArticle(data.data);
+export async function createArticle(payload: unknown) {
+  const { data } = await api.post<ApiResponse<ApiArticle>>("/articles", payload);
+  return data.data;
 }
 
-export async function updateArticle(id: string, payload: Record<string, unknown>) {
-  const { data } = await api.patch<ApiSuccess<unknown>>(`/articles/${id}`, payload);
-  return mapArticle(data.data);
+export async function updateArticle(id: string, payload: unknown) {
+  const { data } = await api.patch<ApiResponse<ApiArticle>>(`/articles/${id}`, payload);
+  return data.data;
 }
 
 export async function deleteArticle(id: string) {
