@@ -9,13 +9,23 @@ const translationSchema = z.object({
   seoDescription: z.string().max(320).optional().default(""),
 });
 
+/** Allow absolute URLs or local /uploads paths */
+const coverImageSchema = z
+  .string()
+  .optional()
+  .default("")
+  .refine(
+    (v) => !v || v.startsWith("http") || v.startsWith("/") || v.startsWith("data:"),
+    { message: "Invalid cover image" }
+  );
+
 export const createArticleSchema = z.object({
   translations: z.object({
     en: translationSchema,
     ar: translationSchema,
   }),
   category: z.string().min(1),
-  coverImage: z.string().url().or(z.literal("")).optional().default(""),
+  coverImage: coverImageSchema,
   status: z.enum(["draft", "published", "scheduled"]).optional().default("draft"),
   isFeatured: z.boolean().optional().default(false),
   isTrending: z.boolean().optional().default(false),
