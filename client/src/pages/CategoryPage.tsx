@@ -1,10 +1,12 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getCategoryBySlug } from "@/data/categories";
 import { getArticlesByCategory } from "@/data/articles";
 import { useLocale } from "@/hooks/useLocale";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { SectionTitle } from "@/components/common/SectionTitle";
+import { Seo } from "@/components/seo/Seo";
+import { LocaleLink } from "@/components/routing/LocaleLink";
 
 export function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -17,10 +19,11 @@ export function CategoryPage() {
   if (!category) {
     return (
       <div className="container-aether py-20 text-center">
+        <Seo title={t("noResults")} path="/" noIndex />
         <h1 className="text-2xl font-bold">{t("noResults")}</h1>
-        <Link to="/" className="mt-4 inline-block text-accent hover:underline">
+        <LocaleLink to="/" className="mt-4 inline-block text-accent hover:underline">
           {t("back")}
-        </Link>
+        </LocaleLink>
       </div>
     );
   }
@@ -31,7 +34,12 @@ export function CategoryPage() {
 
   return (
     <div className="container-aether py-10 pb-16">
-      {/* Header */}
+      <Seo
+        title={name}
+        description={description || `${name} — Aether News`}
+        path={`/${category.slug}`}
+      />
+
       <header className="mb-10 border-b border-border pb-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-accent mb-2">
           {locale === "ar" ? "قسم" : "Category"}
@@ -53,7 +61,6 @@ export function CategoryPage() {
               <ArticleCard article={featured} variant="featured" priority />
             </div>
           )}
-
           {rest.length > 0 && (
             <>
               <SectionTitle title={t("latest")} />

@@ -18,13 +18,14 @@ import { Badge } from "@/components/ui/Badge";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { SectionTitle } from "@/components/common/SectionTitle";
 import { Button } from "@/components/ui/Button";
+import { Seo } from "@/components/seo/Seo";
+import { LocaleLink } from "@/components/routing/LocaleLink";
 
 export function ArticlePage() {
   const { slug } = useParams<{ slug: string }>();
   const locale = useLocale();
   const { t } = useTranslation(["common", "articles"]);
 
-  // Try current locale first, then the other
   const article =
     getArticleBySlug(slug || "", locale) ||
     getArticleBySlug(slug || "", locale === "ar" ? "en" : "ar");
@@ -32,16 +33,16 @@ export function ArticlePage() {
   if (!article) {
     return (
       <div className="container-aether py-20 text-center">
+        <Seo title={t("common:noResults")} path="/" noIndex />
         <h1 className="text-2xl font-bold text-primary">{t("common:noResults")}</h1>
-        <Link to="/" className="mt-4 inline-block text-accent hover:underline">
+        <LocaleLink to="/" className="mt-4 inline-block text-accent hover:underline">
           {t("common:back")}
-        </Link>
+        </LocaleLink>
       </div>
     );
   }
 
   const localized = getLocalizedArticle(article, locale);
-  // Prefer translation in current locale; fall back content still usable
   const contentLocale = article.translations[locale].content
     ? locale
     : locale === "ar"
@@ -49,6 +50,7 @@ export function ArticlePage() {
       : "ar";
   const content = article.translations[contentLocale].content;
   const catName = article.category.translations[locale].name;
+  const catPath = getCategoryPath(article.category.slug, locale);
 
   const related = getArticlesByCategory(article.category.slug)
     .filter((a) => a.id !== article.id)
@@ -68,7 +70,7 @@ export function ArticlePage() {
       try {
         await navigator.share({ title: localized.title, url });
       } catch {
-        /* user cancelled */
+        /* cancelled */
       }
     } else {
       await navigator.clipboard.writeText(url);
@@ -77,7 +79,16 @@ export function ArticlePage() {
 
   return (
     <article className="pb-16">
-      {/* Hero image */}
+      <Seo
+        title={localized.seoTitle || localized.title}
+        description={localized.seoDescription || localized.excerpt}
+        image={article.coverImage}
+        path={`/article/${localized.slug}`}
+        type="article"
+        publishedAt={article.publishedAt}
+        authorName={article.author.name}
+      />
+
       <div className="relative aspect-[21/9] max-h-[420px] w-full overflow-hidden bg-primary">
         <img
           src={article.coverImage}
@@ -90,12 +101,10 @@ export function ArticlePage() {
 
       <div className="container-aether">
         <div className="grid gap-10 lg:grid-cols-12 -mt-16 relative z-10">
-          {/* Main column */}
           <div className="lg:col-span-8">
             <div className="rounded-xl border border-border bg-card p-6 md:p-10 shadow-soft">
-              {/* Meta */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <Link to={getCategoryPath(article.category.slug)}>
+                <Link to={catPath}>
                   <Badge variant="accent">{catName}</Badge>
                 </Link>
                 {article.isBreaking && <Badge variant="breaking">{t("common:breaking")}</Badge>}
@@ -108,7 +117,6 @@ export function ArticlePage() {
 
               <p className="mt-4 text-lg text-muted leading-relaxed">{localized.excerpt}</p>
 
-              {/* Author row */}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-y border-border py-4">
                 <div className="flex items-center gap-3">
                   {article.author.avatar && (
@@ -121,9 +129,8 @@ export function ArticlePage() {
                   <div>
                     <p className="font-semibold text-primary text-sm">{article.author.name}</p>
                     <p className="text-xs text-muted">
-                      {formatDate(article.publishedAt, locale)} · {" "}
-                      {article.readingTime}{" "}
-                      {locale === "ar" ? "دقائق قراءة" : "min read"} · {" "}
+                      {formatDate(article.publishedAt, locale)} · {article.readingTime}{" "}
+                      {locale === "ar" ? "دقائق قراءة" : "min read"} ·{" "}
                       {article.views.toLocaleString(locale === "ar" ? "ar-EG" : "en")}{" "}
                       {locale === "ar" ? "مشاهدة" : "views"}
                     </p>
@@ -142,7 +149,6 @@ export function ArticlePage() {
                 </div>
               </div>
 
-              {/* Body */}
               <div
                 className="article-body mt-8 prose prose-slate max-w-none
                   prose-headings:text-primary prose-p:text-primary/90 prose-p:leading-relaxed
@@ -151,7 +157,6 @@ export function ArticlePage() {
                 dangerouslySetInnerHTML={{ __html: content }}
               />
 
-              {/* Tags */}
               {article.tags.length > 0 && (
                 <div className="mt-10 flex flex-wrap gap-2">
                   {article.tags.map((tag) => (
@@ -165,7 +170,6 @@ export function ArticlePage() {
                 </div>
               )}
 
-              {/* Prev / Next */}
               <div className="mt-10 grid gap-4 sm:grid-cols-2 border-t border-border pt-8">
                 {prevArticle ? (
                   <Link
@@ -194,7 +198,6 @@ export function ArticlePage() {
               </div>
             </div>
 
-            {/* Related */}
             {related.length > 0 && (
               <div className="mt-12">
                 <SectionTitle title={t("articles:relatedTitle")} />
@@ -207,7 +210,6 @@ export function ArticlePage() {
             )}
           </div>
 
-          {/* Sidebar */}
           <aside className="lg:col-span-4">
             <div className="sticky top-24 space-y-6">
               <div className="rounded-xl border border-border bg-card p-5">

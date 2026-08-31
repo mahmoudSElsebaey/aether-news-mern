@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Prefer localized entry points
+Allow: /en/
+Allow: /ar/
+
+Sitemap: /sitemap.xml

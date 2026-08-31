@@ -45,16 +45,13 @@ i18n
     },
   });
 
-/** Keep <html> lang & dir in sync with current language */
 const applyDocumentDirection = (lng: string) => {
-  const isRtl = lng === "ar";
-  document.documentElement.lang = lng;
+  const isRtl = lng === "ar" || lng.startsWith("ar");
   document.documentElement.dir = isRtl ? "rtl" : "ltr";
+  document.documentElement.lang = isRtl ? "ar" : "en";
 };
 
-// Initial apply
 applyDocumentDirection(i18n.language || "en");
-
 i18n.on("languageChanged", applyDocumentDirection);
 
 export default i18n;

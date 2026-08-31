@@ -13,6 +13,7 @@ import { CategorySection } from "@/components/home/CategorySection";
 import { TrendingSidebar } from "@/components/home/TrendingSidebar";
 import { NewsletterCTA } from "@/components/home/NewsletterCTA";
 import { SectionTitle } from "@/components/common/SectionTitle";
+import { Seo } from "@/components/seo/Seo";
 
 export function HomePage() {
   const { t } = useTranslation("home");
@@ -31,12 +32,16 @@ export function HomePage() {
 
   return (
     <div className="pb-16">
-      {/* Breaking ticker */}
+      <Seo
+        title={undefined}
+        description="Independent journalism for a connected world. Sports, technology, business — in Arabic and English."
+        path="/"
+      />
+
       <div className="container-aether pt-6">
         <BreakingTicker articles={breaking.length ? breaking : latest.slice(0, 3)} />
       </div>
 
-      {/* Hero + side stories */}
       <div className="container-aether mt-6">
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8">{hero && <HeroArticle article={hero} />}</div>
@@ -52,7 +57,6 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* Latest + Trending */}
       <div className="container-aether mt-14">
         <div className="grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-8">
@@ -69,31 +73,17 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* Category sections */}
       <div className="container-aether mt-14 space-y-14">
-        <CategorySection
-          title={t("football")}
-          categorySlug="football"
-          articles={football}
-        />
-        <CategorySection
-          title={t("technology")}
-          categorySlug="technology"
-          articles={technology}
-        />
+        <CategorySection title={t("football")} categorySlug="football" articles={football} />
+        <CategorySection title={t("technology")} categorySlug="technology" articles={technology} />
         <CategorySection
           title={t("sports")}
           categorySlug="sports"
           articles={sports.length ? sports : football}
         />
-        <CategorySection
-          title={t("business")}
-          categorySlug="business"
-          articles={business}
-        />
+        <CategorySection title={t("business")} categorySlug="business" articles={business} />
       </div>
 
-      {/* Newsletter */}
       <div className="mt-16">
         <NewsletterCTA />
       </div>

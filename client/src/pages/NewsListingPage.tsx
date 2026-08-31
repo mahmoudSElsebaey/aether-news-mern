@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineSearch } from "react-icons/hi";
 import { articles as allArticles } from "@/data/articles";
@@ -8,10 +8,11 @@ import { useLocale } from "@/hooks/useLocale";
 import { getLocalizedArticle } from "@/utils/article";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { Button } from "@/components/ui/Button";
+import { Seo } from "@/components/seo/Seo";
+import { LocaleLink } from "@/components/routing/LocaleLink";
 import { cn } from "@/utils/cn";
 
 type SortKey = "latest" | "popular" | "trending";
-
 const PAGE_SIZE = 9;
 
 export function NewsListingPage() {
@@ -23,16 +24,13 @@ export function NewsListingPage() {
   const categoryFilter = searchParams.get("category") || "all";
   const sort = (searchParams.get("sort") as SortKey) || "latest";
   const page = Math.max(1, Number(searchParams.get("page") || 1));
-
   const [searchInput, setSearchInput] = useState(q);
 
   const filtered = useMemo(() => {
     let list = allArticles.filter((a) => a.status === "published");
-
     if (categoryFilter !== "all") {
       list = list.filter((a) => a.category.slug === categoryFilter);
     }
-
     if (q.trim()) {
       const query = q.toLowerCase();
       list = list.filter((a) => {
@@ -44,17 +42,13 @@ export function NewsListingPage() {
         );
       });
     }
-
-    if (sort === "popular") {
-      list = [...list].sort((a, b) => b.views - a.views);
-    } else if (sort === "trending") {
+    if (sort === "popular") list = [...list].sort((a, b) => b.views - a.views);
+    else if (sort === "trending")
       list = [...list].filter((a) => a.isTrending).sort((a, b) => b.views - a.views);
-    } else {
+    else
       list = [...list].sort(
         (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
       );
-    }
-
     return list;
   }, [q, categoryFilter, sort, locale]);
 
@@ -79,19 +73,24 @@ export function NewsListingPage() {
     updateParams({ q: searchInput, page: "1" });
   };
 
+  const pageTitle = q
+    ? locale === "ar"
+      ? `نتائج البحث: ${q}`
+      : `Search: ${q}`
+    : t("navigation:news");
+
   return (
     <div className="container-aether py-10 pb-16">
+      <Seo title={pageTitle} path="/news" />
+
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-primary">
-          {q ? (locale === "ar" ? `نتائج البحث: ${q}` : `Search: ${q}`) : t("navigation:news")}
-        </h1>
+        <h1 className="text-3xl font-bold text-primary">{pageTitle}</h1>
         <p className="mt-1 text-muted text-sm">
           {filtered.length}{" "}
           {locale === "ar" ? "نتيجة" : filtered.length === 1 ? "result" : "results"}
         </p>
       </header>
 
-      {/* Filters */}
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-md">
           <div className="relative flex-1">
@@ -143,13 +142,12 @@ export function NewsListingPage() {
         </div>
       </div>
 
-      {/* Results */}
       {pageItems.length === 0 ? (
         <div className="py-20 text-center">
           <p className="text-lg text-muted">{t("common:noResults")}</p>
-          <Link to="/news" className="mt-4 inline-block text-accent hover:underline">
+          <LocaleLink to="/news" className="mt-4 inline-block text-accent hover:underline">
             {t("common:seeAll")}
-          </Link>
+          </LocaleLink>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -159,7 +157,6 @@ export function NewsListingPage() {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <nav className="mt-12 flex items-center justify-center gap-2" aria-label="Pagination">
           <Button

@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { LocaleLink } from "@/components/routing/LocaleLink";
 import { cn } from "@/utils/cn";
 
 interface SectionTitleProps {
@@ -18,12 +18,9 @@ export function SectionTitle({ title, href, className }: SectionTitleProps) {
         <span className="absolute -bottom-1 start-0 h-1 w-10 rounded-full bg-accent" />
       </h2>
       {href && (
-        <Link
-          to={href}
-          className="text-sm font-medium text-accent hover:underline shrink-0"
-        >
+        <LocaleLink to={href} className="text-sm font-medium text-accent hover:underline shrink-0">
           {t("seeAll")}
-        </Link>
+        </LocaleLink>
       )}
     </div>
   );

@@ -1,7 +1,6 @@
 import type { Article } from "@/types/article";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { SectionTitle } from "@/components/common/SectionTitle";
-import { getCategoryPath } from "@/utils/article";
 
 interface CategorySectionProps {
   title: string;
@@ -16,7 +15,7 @@ export function CategorySection({ title, categorySlug, articles }: CategorySecti
 
   return (
     <section>
-      <SectionTitle title={title} href={getCategoryPath(categorySlug)} />
+      <SectionTitle title={title} href={`/${categorySlug}`} />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <ArticleCard article={main} variant="featured" />
