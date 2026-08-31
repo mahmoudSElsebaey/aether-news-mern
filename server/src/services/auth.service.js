@@ -3,14 +3,19 @@ import { ApiError } from "../utils/ApiError.js";
 import { signToken } from "../utils/jwt.js";
 
 export async function registerUser(payload) {
-  const exists = await User.findOne({ email: payload.email });
+  const exists = await User.findOne({ email: payload.email.toLowerCase() });
   if (exists) throw new ApiError(409, "Email already registered");
+
+  // First account in an empty database becomes admin (easy local setup)
+  const userCount = await User.countDocuments();
+  const role = userCount === 0 ? "admin" : "user";
 
   const user = await User.create({
     name: payload.name,
     email: payload.email,
     password: payload.password,
     preferredLanguage: payload.preferredLanguage || "en",
+    role,
   });
 
   const token = signToken({ id: user._id, role: user.role });
@@ -18,7 +23,7 @@ export async function registerUser(payload) {
 }
 
 export async function loginUser({ email, password }) {
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
   if (!user || !(await user.comparePassword(password))) {
     throw new ApiError(401, "Invalid email or password");
   }

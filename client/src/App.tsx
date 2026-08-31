@@ -12,6 +12,7 @@ import { CategoryPage } from "@/pages/CategoryPage";
 import { NewsListingPage } from "@/pages/NewsListingPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { LoginPage } from "@/pages/admin/LoginPage";
+import { RegisterPage } from "@/pages/admin/RegisterPage";
 import { OverviewPage } from "@/pages/admin/OverviewPage";
 import { ArticlesPage } from "@/pages/admin/ArticlesPage";
 import { ArticleEditorPage } from "@/pages/admin/ArticleEditorPage";
@@ -40,6 +41,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/admin/login" element={<LoginPage />} />
+          <Route path="/admin/register" element={<RegisterPage />} />
           <Route
             path="/admin"
             element={

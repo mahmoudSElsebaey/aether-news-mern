@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import * as authApi from "@/services/auth.api";
+import { setStoredToken } from "@/services/api";
 import type { ApiUser } from "@/types/api";
 
 export type UserRole = "user" | "editor" | "admin";
@@ -26,7 +27,13 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isStaff: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
+  register: (payload: {
+    name: string;
+    email: string;
+    password: string;
+    preferredLanguage?: string;
+  }) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -35,7 +42,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function toAuthUser(u: ApiUser): AuthUser {
   return {
-    id: u.id,
+    id: String(u.id),
     name: u.name,
     email: u.email,
     role: u.role,
@@ -76,15 +83,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await authApi.loginRequest(email, password);
-    setUser(toAuthUser(result.user));
+    if (result.token) setStoredToken(result.token);
+    const authUser = toAuthUser(result.user);
+    setUser(authUser);
+    return authUser;
   }, []);
+
+  const register = useCallback(
+    async (payload: {
+      name: string;
+      email: string;
+      password: string;
+      preferredLanguage?: string;
+    }) => {
+      const result = await authApi.registerRequest(payload);
+      if (result.token) setStoredToken(result.token);
+      const authUser = toAuthUser(result.user);
+      setUser(authUser);
+      return authUser;
+    },
+    []
+  );
 
   const logout = useCallback(async () => {
     try {
       await authApi.logoutRequest();
     } catch {
-      // ignore network errors on logout
+      // ignore
     }
+    setStoredToken(null);
     setUser(null);
   }, []);
 
@@ -95,10 +122,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isStaff: user?.role === "admin" || user?.role === "editor",
       loading,
       login,
+      register,
       logout,
       refresh,
     }),
-    [user, loading, login, logout, refresh]
+    [user, loading, login, register, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

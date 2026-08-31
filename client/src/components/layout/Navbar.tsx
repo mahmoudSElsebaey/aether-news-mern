@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineMenuAlt3, HiOutlineX, HiOutlineSearch } from "react-icons/hi";
 import { Logo } from "@/components/brand/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { LocaleLink } from "@/components/routing/LocaleLink";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/hooks/useLocale";
 import { localizedPath } from "@/utils/locale";
 import { cn } from "@/utils/cn";
@@ -22,6 +23,7 @@ const navItems = [
 export function Navbar() {
   const { t } = useTranslation("navigation");
   const locale = useLocale();
+  const { isAuthenticated, isStaff, user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -29,7 +31,7 @@ export function Navbar() {
       <div className="bg-primary text-white">
         <div className="container-aether flex h-8 items-center justify-between text-xs">
           <span className="font-medium tracking-wide opacity-90">
-            Aether News · Independent Journalism
+            Delta News · Independent Journalism
           </span>
           <div className="hidden sm:block">
             <LanguageSwitcher
@@ -78,12 +80,34 @@ export function Navbar() {
             </div>
 
             <div className="hidden md:flex items-center gap-2">
-              <Button variant="ghost" size="sm">
-                {t("login")}
-              </Button>
-              <Button variant="accent" size="sm">
-                {t("register")}
-              </Button>
+              {isStaff && (
+                <Link to="/admin">
+                  <Button variant="outline" size="sm">
+                    {t("admin")}
+                  </Button>
+                </Link>
+              )}
+              {isAuthenticated ? (
+                <>
+                  <span className="text-sm text-muted max-w-[120px] truncate">{user?.name}</span>
+                  <Button variant="ghost" size="sm" type="button" onClick={() => logout()}>
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/admin/login">
+                    <Button variant="ghost" size="sm">
+                      {t("login")}
+                    </Button>
+                  </Link>
+                  <Link to="/admin/register">
+                    <Button variant="accent" size="sm">
+                      {t("register")}
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             <button
@@ -123,25 +147,42 @@ export function Navbar() {
             </NavLink>
           ))}
 
-          <LocaleLink
-            to="/search"
-            onClick={() => setMobileOpen(false)}
-            className="px-3 py-2.5 text-base font-medium rounded-md text-primary hover:bg-surface flex items-center gap-2"
-          >
-            <HiOutlineSearch className="size-5" />
-            {t("search")}
-          </LocaleLink>
-
           <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2">
             <LanguageSwitcher />
-            <div className="flex gap-2">
-              <Button variant="outline" size="md" fullWidth>
-                {t("login")}
+            {isStaff && (
+              <Link to="/admin" onClick={() => setMobileOpen(false)}>
+                <Button variant="outline" size="md" fullWidth>
+                  {t("admin")}
+                </Button>
+              </Link>
+            )}
+            {isAuthenticated ? (
+              <Button
+                variant="ghost"
+                size="md"
+                fullWidth
+                type="button"
+                onClick={() => {
+                  logout();
+                  setMobileOpen(false);
+                }}
+              >
+                Logout
               </Button>
-              <Button variant="accent" size="md" fullWidth>
-                {t("register")}
-              </Button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <Link to="/admin/login" className="flex-1" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="md" fullWidth>
+                    {t("login")}
+                  </Button>
+                </Link>
+                <Link to="/admin/register" className="flex-1" onClick={() => setMobileOpen(false)}>
+                  <Button variant="accent" size="md" fullWidth>
+                    {t("register")}
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </nav>
       </div>

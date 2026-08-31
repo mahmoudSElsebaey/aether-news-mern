@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
@@ -7,15 +7,14 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useAuth } from "@/context/AuthContext";
 import { PageLoader } from "@/components/ui/Spinner";
 
-export function LoginPage() {
+export function RegisterPage() {
   const { t } = useTranslation(["navigation", "common"]);
-  const { login, isAuthenticated, isStaff, loading: authLoading } = useAuth();
+  const { register, isAuthenticated, isStaff, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/admin";
 
-  const [email, setEmail] = useState("admin@delta.news");
-  const [password, setPassword] = useState("Admin123!");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,18 +29,18 @@ export function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const user = await login(email.trim(), password);
-      const staff = user.role === "admin" || user.role === "editor";
-      if (staff) {
-        navigate(from.startsWith("/admin") ? from : "/admin", { replace: true });
+      const user = await register({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+      if (user.role === "admin" || user.role === "editor") {
+        navigate("/admin", { replace: true });
       } else {
-        setError(
-          "Account created as reader only. Dashboard needs admin/editor. Use seed admin or register as first user on empty DB."
-        );
         navigate("/en", { replace: true });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -56,10 +55,21 @@ export function LoginPage() {
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-soft">
         <div className="mb-8 flex flex-col items-center gap-3">
           <Logo />
-          <p className="text-sm text-muted">{t("navigation:admin")} — {t("navigation:login")}</p>
+          <p className="text-sm text-muted">{t("navigation:register")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-primary">Name</label>
+            <input
+              type="text"
+              required
+              minLength={2}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-11 rounded-md border border-border bg-surface px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-primary">Email</label>
             <input
@@ -76,11 +86,13 @@ export function LoginPage() {
             <input
               type="password"
               required
-              autoComplete="current-password"
+              minLength={6}
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full h-11 rounded-md border border-border bg-surface px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
+            <p className="mt-1 text-xs text-muted">Min 6 characters</p>
           </div>
 
           {error && (
@@ -88,27 +100,21 @@ export function LoginPage() {
           )}
 
           <Button type="submit" variant="accent" size="lg" fullWidth isLoading={loading}>
-            {t("navigation:login")}
+            {t("navigation:register")}
           </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-muted">
-          No account?{" "}
-          <Link to="/admin/register" className="text-accent font-medium hover:underline">
-            {t("navigation:register")}
+          Already have an account?{" "}
+          <Link to="/admin/login" className="text-accent font-medium hover:underline">
+            {t("navigation:login")}
           </Link>
         </p>
 
-        <div className="mt-6 rounded-md bg-surface border border-border p-3 text-xs text-muted leading-relaxed">
-          <p className="font-semibold text-primary mb-1">Dashboard access</p>
-          <p>1) Run in server folder: <code className="text-primary">npm run seed</code></p>
-          <p className="mt-1">2) Login with:</p>
-          <p className="mt-1 font-mono text-primary">admin@delta.news / Admin123!</p>
-          <p className="mt-1 text-[11px]">
-            Or register the <strong>first</strong> account on an empty database → becomes admin
-            automatically.
-          </p>
-        </div>
+        <p className="mt-4 text-xs text-muted text-center leading-relaxed">
+          If the database has <strong>no users</strong>, your account becomes{" "}
+          <strong>admin</strong> and you can open the dashboard.
+        </p>
       </div>
     </div>
   );
