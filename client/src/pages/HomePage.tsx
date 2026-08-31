@@ -43,7 +43,7 @@ export function HomePage() {
     return (
       <div className="container-aether py-20 text-center">
         <Seo path="/" />
-        <h1 className="text-2xl font-bold text-primary">Aether News</h1>
+        <h1 className="text-2xl font-bold text-primary">{t("common:brand")}</h1>
         <p className="mt-2 text-muted">{t("common:noResults")}</p>
         <p className="mt-1 text-sm text-muted">
           {locale === "ar"
