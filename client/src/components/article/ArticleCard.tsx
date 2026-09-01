@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -9,6 +10,7 @@ import {
   getCategoryPath,
   formatRelativeTime,
 } from "@/utils/article";
+import { resolveMediaUrl } from "@/services/upload.api";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/utils/cn";
 
@@ -17,6 +19,47 @@ interface ArticleCardProps {
   variant?: "default" | "horizontal" | "compact" | "featured";
   className?: string;
   priority?: boolean;
+}
+
+function CoverImage({
+  src,
+  priority,
+  className,
+}: {
+  src: string;
+  priority?: boolean;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const url = resolveMediaUrl(src);
+
+  if (!url || failed) {
+    return (
+      <div
+        className={cn(
+          "flex size-full items-center justify-center bg-gradient-to-br from-primary/90 to-primary text-white/30",
+          className
+        )}
+      >
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
+          <path
+            d="M11 10h12c5.5 0 10 4 10 10s-4.5 10-10 10H11V10zm4 3.5v13h8c3.6 0 6.5-2.7 6.5-6.5S26.6 13.5 23 13.5H15z"
+            fill="currentColor"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={url}
+      alt=""
+      loading={priority ? "eager" : "lazy"}
+      className={cn("size-full object-cover object-center", className)}
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 export function ArticleCard({
@@ -41,13 +84,11 @@ export function ArticleCard({
         transition={{ duration: 0.35 }}
         className={cn("group flex gap-4", className)}
       >
-        <Link to={path} className="relative size-24 sm:size-28 shrink-0 overflow-hidden rounded-md">
-          <img
-            src={article.coverImage}
-            alt=""
-            loading={priority ? "eager" : "lazy"}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        <Link
+          to={path}
+          className="relative size-24 sm:size-28 shrink-0 overflow-hidden rounded-md bg-primary/10"
+        >
+          <CoverImage src={article.coverImage} priority={priority} className="transition-transform duration-500 group-hover:scale-105" />
         </Link>
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex items-center gap-2 flex-wrap">
@@ -106,16 +147,18 @@ export function ArticleCard({
       transition={{ duration: 0.4 }}
       className={cn("group flex flex-col", className)}
     >
-      <Link to={path} className="relative aspect-[16/10] overflow-hidden rounded-lg bg-slate-200">
-        <img
+      <Link
+        to={path}
+        className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-primary/10"
+      >
+        <CoverImage
           src={article.coverImage}
-          alt=""
-          loading={priority ? "eager" : "lazy"}
-          className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          priority={priority}
+          className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         {(article.isBreaking || article.isFeatured) && (
-          <div className="absolute top-3 start-3 flex gap-1.5">
+          <div className="absolute top-3 start-3 flex gap-1.5 z-10">
             {article.isBreaking && <Badge variant="breaking">{t("breaking")}</Badge>}
             {article.isFeatured && !article.isBreaking && (
               <Badge variant="featured">{t("featured")}</Badge>

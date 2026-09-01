@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineMenuAlt3, HiOutlineX, HiOutlineSearch } from "react-icons/hi";
@@ -21,19 +21,38 @@ const navItems = [
 ] as const;
 
 export function Navbar() {
-  const { t } = useTranslation("navigation");
+  const { t, i18n } = useTranslation("navigation");
   const locale = useLocale();
   const { isAuthenticated, isStaff, user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const todayLabel = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date());
+    } catch {
+      return new Date().toDateString();
+    }
+  }, [locale]);
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="bg-primary text-white">
-        <div className="container-aether flex h-8 items-center justify-between text-xs">
-          <span className="font-medium tracking-wide opacity-90">
-            Delta News · Independent Journalism
-          </span>
-          <div className="hidden sm:block">
+        <div className="container-aether flex h-9 items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3 min-w-0">
+            <time className="hidden sm:inline text-white/70 whitespace-nowrap">{todayLabel}</time>
+            <span className="hidden sm:inline text-white/30" aria-hidden>
+              |
+            </span>
+            <span className="font-medium tracking-wide text-white/90 truncate">
+              {t("tagline")}
+            </span>
+          </div>
+          <div className="hidden sm:block shrink-0">
             <LanguageSwitcher
               compact
               className="border-white/20 bg-transparent [&>button]:text-white/80 [&>button[aria-pressed=true]]:bg-white/15 [&>button[aria-pressed=true]]:text-white"
@@ -53,20 +72,20 @@ export function Navbar() {
                 to={localizedPath(item.path, locale)}
                 className={({ isActive }) =>
                   cn(
-                    "relative px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300",
+                    "relative px-3 py-2 text-sm font-medium rounded-md transition-colors duration-300",
                     isActive
-                      ? "text-accent bg-accent/10 shadow-[inset_0_0_0_1px_rgba(225,29,72,0.15)]"
-                      : "text-primary/80 hover:text-primary hover:bg-surface"
+                      ? "text-accent"
+                      : "text-primary/80 hover:text-primary"
                   )
                 }
                 end={item.path === "/"}
               >
                 {({ isActive }) => (
                   <>
-                    <span className="relative z-10">{t(item.key)}</span>
+                    <span>{t(item.key)}</span>
                     <span
                       className={cn(
-                        "pointer-events-none absolute inset-x-2 -bottom-0.5 h-0.5 rounded-full bg-accent origin-center transition-transform duration-300",
+                        "pointer-events-none absolute inset-x-3 -bottom-0.5 h-[2px] rounded-full bg-accent origin-center transition-transform duration-300 ease-out",
                         isActive ? "scale-x-100" : "scale-x-0"
                       )}
                     />
@@ -101,7 +120,7 @@ export function Navbar() {
                 <>
                   <span className="text-sm text-muted max-w-[120px] truncate">{user?.name}</span>
                   <Button variant="ghost" size="sm" type="button" onClick={() => logout()}>
-                    Logout
+                    {t("logout")}
                   </Button>
                 </>
               ) : (
@@ -140,6 +159,7 @@ export function Navbar() {
         )}
       >
         <nav className="container-aether py-4 flex flex-col gap-1" aria-label="Mobile">
+          <p className="px-3 pb-2 text-xs text-muted sm:hidden">{todayLabel}</p>
           {navItems.map((item) => (
             <NavLink
               key={item.key}
@@ -147,15 +167,20 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 cn(
-                  "px-3 py-2.5 text-base font-medium rounded-lg transition-all duration-300 border-s-2",
-                  isActive
-                    ? "bg-accent/10 text-accent border-accent"
-                    : "text-primary hover:bg-surface border-transparent"
+                  "relative px-3 py-2.5 text-base font-medium rounded-md transition-colors",
+                  isActive ? "text-accent" : "text-primary hover:bg-surface"
                 )
               }
               end={item.path === "/"}
             >
-              {t(item.key)}
+              {({ isActive }) => (
+                <>
+                  {t(item.key)}
+                  {isActive && (
+                    <span className="absolute start-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-accent" />
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
 
@@ -179,7 +204,7 @@ export function Navbar() {
                   setMobileOpen(false);
                 }}
               >
-                Logout
+                {t("logout")}
               </Button>
             ) : (
               <div className="flex gap-2">
