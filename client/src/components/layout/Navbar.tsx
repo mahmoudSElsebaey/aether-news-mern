@@ -21,7 +21,7 @@ const navItems = [
 ] as const;
 
 export function Navbar() {
-  const { t, i18n } = useTranslation("navigation");
+  const { t } = useTranslation("navigation");
   const locale = useLocale();
   const { isAuthenticated, isStaff, user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,9 +73,7 @@ export function Navbar() {
                 className={({ isActive }) =>
                   cn(
                     "relative px-3 py-2 text-sm font-medium rounded-md transition-colors duration-300",
-                    isActive
-                      ? "text-accent"
-                      : "text-primary/80 hover:text-primary"
+                    isActive ? "text-accent" : "text-primary/80 hover:text-primary"
                   )
                 }
                 end={item.path === "/"}

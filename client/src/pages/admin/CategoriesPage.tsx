@@ -5,7 +5,7 @@ import type { ApiCategory } from "@/types/api";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { PageLoader, ErrorState } from "@/components/ui/Spinner";
+import { PageLoader } from "@/components/ui/Spinner";
 
 export function CategoriesPage() {
   const { t } = useTranslation("dashboard");

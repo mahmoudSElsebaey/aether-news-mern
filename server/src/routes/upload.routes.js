@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { fileURLToPath } from "url";
 import { protect, authorize } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -11,11 +12,26 @@ import { cloudinary, hasCloudinary } from "../config/cloudinary.js";
 import { env } from "../config/env.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadDir = path.join(__dirname, "../../uploads");
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+/** Prefer local uploads dir; on Vercel (read-only) fall back to OS temp */
+function resolveUploadDir() {
+  const local = path.join(__dirname, "../../uploads");
+  try {
+    if (!fs.existsSync(local)) fs.mkdirSync(local, { recursive: true });
+    fs.accessSync(local, fs.constants.W_OK);
+    return local;
+  } catch {
+    const tmp = path.join(os.tmpdir(), "delta-news-uploads");
+    try {
+      if (!fs.existsSync(tmp)) fs.mkdirSync(tmp, { recursive: true });
+    } catch {
+      /* ignore */
+    }
+    return tmp;
+  }
 }
+
+const uploadDir = resolveUploadDir();
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
@@ -51,7 +67,6 @@ router.post(
         folder: env.cloudinary.folder,
         resource_type: "image",
       });
-      // remove local temp file
       fs.unlink(req.file.path, () => {});
       return success(res, {
         url: result.secure_url,
@@ -71,46 +86,54 @@ router.post(
   })
 );
 
-/** List recent media (Cloudinary if configured) */
 router.get(
   "/",
   protect,
   authorize("editor", "admin"),
   asyncHandler(async (req, res) => {
     if (hasCloudinary) {
-      const result = await cloudinary.search
-        .expression(`folder:${env.cloudinary.folder}/*`)
-        .sort_by("created_at", "desc")
-        .max_results(30)
-        .execute();
+      try {
+        const result = await cloudinary.search
+          .expression(`folder:${env.cloudinary.folder}/*`)
+          .sort_by("created_at", "desc")
+          .max_results(30)
+          .execute();
 
-      const items = (result.resources || []).map((r) => ({
-        id: r.public_id,
-        url: r.secure_url,
-        width: r.width,
-        height: r.height,
-        format: r.format,
-        createdAt: r.created_at,
-        provider: "cloudinary",
-      }));
-      return success(res, items, { provider: "cloudinary", total: items.length });
+        const items = (result.resources || []).map((r) => ({
+          id: r.public_id,
+          url: r.secure_url,
+          width: r.width,
+          height: r.height,
+          format: r.format,
+          createdAt: r.created_at,
+          provider: "cloudinary",
+        }));
+        return success(res, items, { provider: "cloudinary", total: items.length });
+      } catch (err) {
+        console.error("[upload] cloudinary list failed", err);
+        return success(res, [], { provider: "cloudinary", total: 0 });
+      }
     }
 
-    // Local uploads folder listing
-    const files = fs
-      .readdirSync(uploadDir)
-      .filter((f) => !f.startsWith("."))
-      .map((f) => {
-        const stat = fs.statSync(path.join(uploadDir, f));
-        return {
-          id: f,
-          url: `/uploads/${f}`,
-          createdAt: stat.mtime.toISOString(),
-          provider: "local",
-        };
-      })
-      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-      .slice(0, 30);
+    let files = [];
+    try {
+      files = fs
+        .readdirSync(uploadDir)
+        .filter((f) => !f.startsWith("."))
+        .map((f) => {
+          const stat = fs.statSync(path.join(uploadDir, f));
+          return {
+            id: f,
+            url: `/uploads/${f}`,
+            createdAt: stat.mtime.toISOString(),
+            provider: "local",
+          };
+        })
+        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+        .slice(0, 30);
+    } catch {
+      files = [];
+    }
 
     return success(res, files, { provider: "local", total: files.length });
   })

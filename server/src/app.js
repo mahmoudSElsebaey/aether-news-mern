@@ -31,13 +31,12 @@ app.use(
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow same-origin / server-to-server / local tools with no Origin
       if (!origin) return callback(null, true);
-      if (env.clientUrls.includes(origin) || env.clientUrls.includes("*")) {
+      if (env.clientUrls.includes("*") || env.clientUrls.includes(origin)) {
         return callback(null, true);
       }
-      // Reflect allowed list (credentials require explicit origin)
-      return callback(new Error(`CORS blocked for origin: ${origin}`), false);
+      // Do not throw — throwing crashes serverless handlers
+      return callback(null, false);
     },
     credentials: true,
   })
@@ -51,8 +50,11 @@ if (!env.isProd) {
   app.use(morgan("dev"));
 }
 
-// Local uploads only work on a persistent disk (not Vercel FS)
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+try {
+  app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+} catch {
+  // ignore on read-only filesystems
+}
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -75,6 +77,15 @@ app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 
 app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Delta News API is running",
+    env: env.nodeEnv,
+  });
+});
+
+// Also expose health without /api prefix (some rewrites strip it)
+app.get("/health", (req, res) => {
   res.json({
     success: true,
     message: "Delta News API is running",
