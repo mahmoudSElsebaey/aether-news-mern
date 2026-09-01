@@ -1,6 +1,19 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+/**
+ * Production: set VITE_API_URL in Vercel → Environment Variables, then Redeploy.
+ * Example: https://delta-news-server.vercel.app/api
+ */
+function resolveBaseUrl() {
+  const fromEnv = import.meta.env.VITE_API_URL as string | undefined;
+  if (fromEnv && fromEnv.trim()) {
+    return fromEnv.replace(/\/$/, "");
+  }
+  // Dev fallback only
+  return "http://localhost:5000/api";
+}
+
+const baseURL = resolveBaseUrl();
 const TOKEN_KEY = "delta_token";
 
 export function getStoredToken(): string | null {
@@ -33,7 +46,6 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  // Let browser set multipart boundary
   if (typeof FormData !== "undefined" && config.data instanceof FormData) {
     if (config.headers) {
       delete config.headers["Content-Type"];
@@ -53,3 +65,8 @@ api.interceptors.response.use(
     return Promise.reject(new Error(message));
   }
 );
+
+// Helpful in production debugging (visible in browser console once)
+if (import.meta.env.PROD) {
+  console.info("[Delta News] API baseURL =", baseURL);
+}

@@ -28,17 +28,34 @@ app.use(
   })
 );
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (env.clientUrls.includes("*")) return true;
+  if (env.clientUrls.includes(origin)) return true;
+
+  // Local dev
+  if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  if (/^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+
+  // Any Vercel preview/production frontend
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
+
+  return false;
+}
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (env.clientUrls.includes("*") || env.clientUrls.includes(origin)) {
-        return callback(null, true);
+      if (isAllowedOrigin(origin)) {
+        // Reflect the request origin so credentials work
+        return callback(null, origin || true);
       }
-      // Do not throw — throwing crashes serverless handlers
+      console.warn(`[cors] blocked origin: ${origin}`);
       return callback(null, false);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -81,10 +98,10 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "Delta News API is running",
     env: env.nodeEnv,
+    corsClients: env.clientUrls,
   });
 });
 
-// Also expose health without /api prefix (some rewrites strip it)
 app.get("/health", (req, res) => {
   res.json({
     success: true,
