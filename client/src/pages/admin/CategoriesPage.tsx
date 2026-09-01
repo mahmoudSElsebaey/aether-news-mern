@@ -4,6 +4,7 @@ import * as categoriesApi from "@/services/categories.api";
 import type { ApiCategory } from "@/types/api";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 
 export function CategoriesPage() {
@@ -14,6 +15,8 @@ export function CategoriesPage() {
   const [editing, setEditing] = useState<ApiCategory | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [nameEn, setNameEn] = useState("");
   const [nameAr, setNameAr] = useState("");
@@ -61,6 +64,7 @@ export function CategoriesPage() {
   const handleSave = async () => {
     if (!nameEn.trim() || !nameAr.trim()) return;
     setSaving(true);
+    setError(null);
     try {
       const payload = {
         translations: {
@@ -78,24 +82,28 @@ export function CategoriesPage() {
       setCreating(false);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm(t("confirmDelete"))) return;
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
     try {
-      await categoriesApi.deleteCategory(id);
+      await categoriesApi.deleteCategory(deleteId);
+      setDeleteId(null);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : "Delete failed");
+      setDeleteId(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
   if (loading) return <PageLoader />;
-  if (error) return <ErrorState message={error} onRetry={load} />;
 
   return (
     <div className="space-y-6">
@@ -108,6 +116,10 @@ export function CategoriesPage() {
           {t("createCategory")}
         </Button>
       </div>
+
+      {error && (
+        <p className="text-sm text-error bg-error/10 rounded-xl px-3 py-2">{error}</p>
+      )}
 
       {(creating || editing) && (
         <div className="rounded-xl border border-border bg-card p-5 space-y-4 max-w-2xl">
@@ -197,12 +209,16 @@ export function CategoriesPage() {
                   <Badge variant="muted">{cat.slug}</Badge>
                 </td>
                 <td className="px-4 py-3 text-end space-x-2">
-                  <button type="button" onClick={() => openEdit(cat)} className="text-sm text-accent hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(cat)}
+                    className="text-sm text-accent hover:underline"
+                  >
                     Edit
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(cat._id)}
+                    onClick={() => setDeleteId(cat._id)}
                     className="text-sm text-error hover:underline"
                   >
                     Delete
@@ -213,6 +229,17 @@ export function CategoriesPage() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal
+        open={!!deleteId}
+        title={t("deleteArticle")}
+        message={t("confirmDelete")}
+        confirmLabel={t("deleteArticle")}
+        cancelLabel="Cancel"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }

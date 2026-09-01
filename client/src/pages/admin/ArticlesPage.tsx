@@ -8,6 +8,7 @@ import { useLocale } from "@/hooks/useLocale";
 import { getLocalizedArticle, formatDate } from "@/utils/article";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PageLoader, ErrorState } from "@/components/ui/Spinner";
 import { cn } from "@/utils/cn";
 
@@ -16,6 +17,9 @@ export function ArticlesPage() {
   const locale = useLocale();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const { articles, loading, error, reload } = useArticles({
     status: statusFilter === "all" ? "all" : statusFilter,
@@ -26,13 +30,19 @@ export function ArticlesPage() {
 
   const filtered = useMemo(() => articles, [articles]);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm(t("confirmDelete"))) return;
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    setActionError("");
     try {
-      await articlesApi.deleteArticle(id);
+      await articlesApi.deleteArticle(deleteId);
+      setDeleteId(null);
       reload();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Delete failed");
+      setActionError(err instanceof Error ? err.message : "Delete failed");
+      setDeleteId(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -50,6 +60,10 @@ export function ArticlesPage() {
           </Button>
         </Link>
       </div>
+
+      {actionError && (
+        <p className="text-sm text-error bg-error/10 rounded-xl px-3 py-2">{actionError}</p>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <input
@@ -149,7 +163,7 @@ export function ArticlesPage() {
                             </Link>
                             <button
                               type="button"
-                              onClick={() => handleDelete(article.id)}
+                              onClick={() => setDeleteId(article.id)}
                               className="p-2 rounded-md text-muted hover:text-error hover:bg-error/10"
                             >
                               <HiOutlineTrash className="size-4" />
@@ -165,6 +179,17 @@ export function ArticlesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deleteId}
+        title={t("deleteArticle")}
+        message={t("confirmDelete")}
+        confirmLabel={t("deleteArticle")}
+        cancelLabel="Cancel"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }
