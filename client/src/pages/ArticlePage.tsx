@@ -7,10 +7,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/hooks/useLocale";
 import {
   getLocalizedArticle,
-  getArticlePath,
   getCategoryPath,
   formatDate,
 } from "@/utils/article";
+import { resolveMediaUrl } from "@/services/upload.api";
 import * as bookmarksApi from "@/services/bookmarks.api";
 import { Badge } from "@/components/ui/Badge";
 import { ArticleCard } from "@/components/article/ArticleCard";
@@ -51,6 +51,7 @@ export function ArticlePage() {
     article.translations[locale === "ar" ? "en" : "ar"].content;
   const catName = article.category.translations[locale].name;
   const catPath = getCategoryPath(article.category.slug, locale);
+  const cover = resolveMediaUrl(article.coverImage);
 
   const related = relatedPool
     .filter((a) => a.category.slug === article.category.slug && a.id !== article.id)
@@ -90,7 +91,7 @@ export function ArticlePage() {
       <Seo
         title={localized.seoTitle || localized.title}
         description={localized.seoDescription || localized.excerpt}
-        image={article.coverImage}
+        image={cover}
         path={`/article/${localized.slug}`}
         type="article"
         publishedAt={article.publishedAt}
@@ -98,12 +99,14 @@ export function ArticlePage() {
       />
 
       <div className="relative aspect-[21/9] max-h-[420px] w-full overflow-hidden bg-primary">
-        <img
-          src={article.coverImage}
-          alt=""
-          className="size-full object-cover"
-          fetchPriority="high"
-        />
+        {cover ? (
+          <img
+            src={cover}
+            alt=""
+            className="absolute inset-0 block h-full w-full object-cover object-center"
+            fetchPriority="high"
+          />
+        ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
 
@@ -194,7 +197,7 @@ export function ArticlePage() {
             <div className="sticky top-24 space-y-6">
               <div className="rounded-xl border border-border bg-card p-5">
                 <SectionTitle title={t("articles:trendingTitle")} className="mb-4" />
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-5">
                   {trending.map((a) => (
                     <ArticleCard key={a.id} article={a} variant="horizontal" />
                   ))}

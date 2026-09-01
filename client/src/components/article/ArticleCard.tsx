@@ -21,6 +21,7 @@ interface ArticleCardProps {
   priority?: boolean;
 }
 
+/** Always fills parent via absolute inset — avoids gray gaps under thumbnails */
 function CoverImage({
   src,
   priority,
@@ -37,11 +38,12 @@ function CoverImage({
     return (
       <div
         className={cn(
-          "flex size-full items-center justify-center bg-gradient-to-br from-primary/90 to-primary text-white/30",
+          "absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-hover text-white/35",
           className
         )}
+        aria-hidden
       >
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
           <path
             d="M11 10h12c5.5 0 10 4 10 10s-4.5 10-10 10H11V10zm4 3.5v13h8c3.6 0 6.5-2.7 6.5-6.5S26.6 13.5 23 13.5H15z"
             fill="currentColor"
@@ -56,7 +58,11 @@ function CoverImage({
       src={url}
       alt=""
       loading={priority ? "eager" : "lazy"}
-      className={cn("size-full object-cover object-center", className)}
+      decoding="async"
+      className={cn(
+        "absolute inset-0 block h-full w-full max-w-none object-cover object-center",
+        className
+      )}
       onError={() => setFailed(true)}
     />
   );
@@ -82,15 +88,19 @@ export function ArticleCard({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
         transition={{ duration: 0.35 }}
-        className={cn("group flex gap-4", className)}
+        className={cn("group flex gap-3 sm:gap-4", className)}
       >
         <Link
           to={path}
-          className="relative size-24 sm:size-28 shrink-0 overflow-hidden rounded-md bg-primary/10"
+          className="relative block h-[4.5rem] w-[4.5rem] sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-slate-200 ring-1 ring-black/5"
         >
-          <CoverImage src={article.coverImage} priority={priority} className="transition-transform duration-500 group-hover:scale-105" />
+          <CoverImage
+            src={article.coverImage}
+            priority={priority}
+            className="transition-transform duration-500 group-hover:scale-105"
+          />
         </Link>
-        <div className="flex min-w-0 flex-col justify-center gap-1.5">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Link
               to={catPath}
@@ -101,7 +111,7 @@ export function ArticleCard({
             {article.isBreaking && <Badge variant="breaking">{t("breaking")}</Badge>}
           </div>
           <Link to={path}>
-            <h3 className="text-sm sm:text-base font-semibold text-primary leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+            <h3 className="text-sm sm:text-[0.95rem] font-semibold text-primary leading-snug line-clamp-2 group-hover:text-accent transition-colors">
               {localized.title}
             </h3>
           </Link>
@@ -149,16 +159,16 @@ export function ArticleCard({
     >
       <Link
         to={path}
-        className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-primary/10"
+        className="relative block aspect-[16/10] w-full overflow-hidden rounded-lg bg-slate-200 ring-1 ring-black/5"
       >
         <CoverImage
           src={article.coverImage}
           priority={priority}
-          className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.03]"
+          className="transition-transform duration-700 group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
         {(article.isBreaking || article.isFeatured) && (
-          <div className="absolute top-3 start-3 flex gap-1.5 z-10">
+          <div className="absolute top-3 start-3 z-10 flex gap-1.5">
             {article.isBreaking && <Badge variant="breaking">{t("breaking")}</Badge>}
             {article.isFeatured && !article.isBreaking && (
               <Badge variant="featured">{t("featured")}</Badge>
