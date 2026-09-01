@@ -21,15 +21,12 @@ interface ArticleCardProps {
   priority?: boolean;
 }
 
-/** Always fills parent via absolute inset — avoids gray gaps under thumbnails */
 function CoverImage({
   src,
   priority,
-  className,
 }: {
   src: string;
   priority?: boolean;
-  className?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const url = resolveMediaUrl(src);
@@ -37,10 +34,7 @@ function CoverImage({
   if (!url || failed) {
     return (
       <div
-        className={cn(
-          "absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-hover text-white/35",
-          className
-        )}
+        className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-hover text-white/35"
         aria-hidden
       >
         <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
@@ -59,10 +53,7 @@ function CoverImage({
       alt=""
       loading={priority ? "eager" : "lazy"}
       decoding="async"
-      className={cn(
-        "absolute inset-0 block h-full w-full max-w-none object-cover object-center",
-        className
-      )}
+      className="media-cover transition-transform duration-500 group-hover:scale-105"
       onError={() => setFailed(true)}
     />
   );
@@ -92,13 +83,9 @@ export function ArticleCard({
       >
         <Link
           to={path}
-          className="relative block h-[4.5rem] w-[4.5rem] sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-slate-200 ring-1 ring-black/5"
+          className="media-frame h-[4.5rem] w-[4.5rem] sm:h-24 sm:w-24 rounded-lg bg-slate-200 ring-1 ring-black/5"
         >
-          <CoverImage
-            src={article.coverImage}
-            priority={priority}
-            className="transition-transform duration-500 group-hover:scale-105"
-          />
+          <CoverImage src={article.coverImage} priority={priority} />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -159,13 +146,9 @@ export function ArticleCard({
     >
       <Link
         to={path}
-        className="relative block aspect-[16/10] w-full overflow-hidden rounded-lg bg-slate-200 ring-1 ring-black/5"
+        className="media-frame aspect-[16/10] w-full rounded-lg bg-slate-200 ring-1 ring-black/5"
       >
-        <CoverImage
-          src={article.coverImage}
-          priority={priority}
-          className="transition-transform duration-700 group-hover:scale-[1.03]"
-        />
+        <CoverImage src={article.coverImage} priority={priority} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
         {(article.isBreaking || article.isFeatured) && (
           <div className="absolute top-3 start-3 z-10 flex gap-1.5">

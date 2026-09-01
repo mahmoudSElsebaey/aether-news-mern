@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================
-   Aether News — Design Tokens
+   Delta News — Design Tokens
    ============================================ */
 
 @theme {
@@ -86,9 +86,31 @@ a {
   text-decoration: none;
 }
 
+/*
+  DO NOT set height: auto on all images — it breaks object-fit: cover
+  inside fixed frames (thumbnails, hero, cards) and leaves gray gaps.
+*/
 img {
   max-width: 100%;
-  height: auto;
+  display: block;
+}
+
+/* Cover images that must fill their frame completely */
+.media-frame {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.media-frame > img,
+img.media-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -135,12 +157,12 @@ img {
   }
 }
 
-/* Article reading comfort */
 .article-body p {
   overflow-wrap: anywhere;
 }
 
-/* Prevent layout shift on image load in cards */
-.aspect-\[16\/10\] {
-  aspect-ratio: 16 / 10;
+.article-body img {
+  height: auto;
+  max-width: 100%;
+  border-radius: 0.5rem;
 }

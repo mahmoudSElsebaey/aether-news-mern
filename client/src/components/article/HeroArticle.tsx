@@ -30,22 +30,20 @@ export function HeroArticle({ article }: HeroArticleProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-xl bg-primary min-h-[320px] md:min-h-[420px] lg:min-h-[480px]"
+      className="media-frame min-h-[320px] md:min-h-[420px] lg:min-h-[480px] rounded-xl bg-primary"
     >
-      {/* Full-bleed cover */}
       <Link to={path} className="absolute inset-0 block" aria-hidden tabIndex={-1}>
         {cover ? (
           <img
             src={cover}
             alt=""
-            className="absolute inset-0 size-full object-cover object-center"
+            className="media-cover"
             fetchPriority="high"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         ) : null}
-        {/* Gradient for readable text on both LTR/RTL */}
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/70 to-primary/20" />
         <div className="absolute inset-0 bg-gradient-to-e from-primary/80 via-primary/30 to-transparent" />
       </Link>
@@ -79,6 +77,7 @@ export function HeroArticle({ article }: HeroArticleProps) {
                 src={article.author.avatar}
                 alt=""
                 className="size-8 rounded-full object-cover ring-2 ring-white/20"
+                style={{ height: "2rem", width: "2rem" }}
               />
             )}
             <span className="font-medium text-white/85">{article.author.name}</span>
