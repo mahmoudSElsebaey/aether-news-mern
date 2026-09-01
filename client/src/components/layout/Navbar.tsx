@@ -53,15 +53,25 @@ export function Navbar() {
                 to={localizedPath(item.path, locale)}
                 className={({ isActive }) =>
                   cn(
-                    "px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                    "relative px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300",
                     isActive
-                      ? "text-accent"
+                      ? "text-accent bg-accent/10 shadow-[inset_0_0_0_1px_rgba(225,29,72,0.15)]"
                       : "text-primary/80 hover:text-primary hover:bg-surface"
                   )
                 }
                 end={item.path === "/"}
               >
-                {t(item.key)}
+                {({ isActive }) => (
+                  <>
+                    <span className="relative z-10">{t(item.key)}</span>
+                    <span
+                      className={cn(
+                        "pointer-events-none absolute inset-x-2 -bottom-0.5 h-0.5 rounded-full bg-accent origin-center transition-transform duration-300",
+                        isActive ? "scale-x-100" : "scale-x-0"
+                      )}
+                    />
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -137,8 +147,10 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 cn(
-                  "px-3 py-2.5 text-base font-medium rounded-md",
-                  isActive ? "bg-accent/10 text-accent" : "text-primary hover:bg-surface"
+                  "px-3 py-2.5 text-base font-medium rounded-lg transition-all duration-300 border-s-2",
+                  isActive
+                    ? "bg-accent/10 text-accent border-accent"
+                    : "text-primary hover:bg-surface border-transparent"
                 )
               }
               end={item.path === "/"}
