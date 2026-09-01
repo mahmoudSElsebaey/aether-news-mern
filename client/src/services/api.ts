@@ -28,11 +28,16 @@ export const api = axios.create({
   },
 });
 
-// Attach Bearer token (fallback when cookie is blocked)
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  // Let browser set multipart boundary
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers["Content-Type"];
+    }
   }
   return config;
 });

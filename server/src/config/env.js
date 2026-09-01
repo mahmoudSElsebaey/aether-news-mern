@@ -19,4 +19,14 @@ export const env = {
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   cookieSecure: process.env.COOKIE_SECURE === "true",
   isProd: process.env.NODE_ENV === "production",
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+    apiKey: process.env.CLOUDINARY_API_KEY || "",
+    apiSecret: process.env.CLOUDINARY_API_SECRET || "",
+    folder: process.env.CLOUDINARY_FOLDER || "delta-news",
+  },
 };
+
+export const hasCloudinary = Boolean(
+  env.cloudinary.cloudName && env.cloudinary.apiKey && env.cloudinary.apiSecret
+);
