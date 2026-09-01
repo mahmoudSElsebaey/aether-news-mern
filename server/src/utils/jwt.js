@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 
 export function signToken(payload) {
-  // Always stringify Mongo ids so verify + findById stay reliable
   const safe = {
     ...payload,
     id: payload.id != null ? String(payload.id) : payload.id,

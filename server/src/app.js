@@ -30,7 +30,15 @@ app.use(
 
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin(origin, callback) {
+      // Allow same-origin / server-to-server / local tools with no Origin
+      if (!origin) return callback(null, true);
+      if (env.clientUrls.includes(origin) || env.clientUrls.includes("*")) {
+        return callback(null, true);
+      }
+      // Reflect allowed list (credentials require explicit origin)
+      return callback(new Error(`CORS blocked for origin: ${origin}`), false);
+    },
     credentials: true,
   })
 );
@@ -38,14 +46,17 @@ app.use(
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(morgan(env.isProd ? "combined" : "dev"));
 
-// Local uploaded images
+if (!env.isProd) {
+  app.use(morgan("dev"));
+}
+
+// Local uploads only work on a persistent disk (not Vercel FS)
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 400,
+  max: env.isProd ? 600 : 400,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many requests, try again later" },
@@ -53,7 +64,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 40,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many auth attempts, try again later" },
